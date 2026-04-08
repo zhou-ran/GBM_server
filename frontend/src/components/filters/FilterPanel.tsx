@@ -4,7 +4,11 @@ import { useDataStore } from '../../stores/dataStore';
 import { useFilterStore } from '../../stores/filterStore';
 import { FilterChip } from './FilterChip';
 
-export function FilterPanel() {
+interface FilterPanelProps {
+  omitColumns?: string[];
+}
+
+export function FilterPanel({ omitColumns = [] }: FilterPanelProps) {
   const schema = useDataStore((s) => s.schema);
   const filterableColumns = useFilterStore((s) => s.filterableColumns);
   const activeFilters = useFilterStore((s) => s.activeFilters);
@@ -18,7 +22,7 @@ export function FilterPanel() {
         Filters
       </h3>
       {schema.columns
-        .filter((col) => filterableColumns.includes(col.name))
+        .filter((col) => filterableColumns.includes(col.name) && !omitColumns.includes(col.name))
         .map((col) => (
           <div key={col.name}>
             <div className="text-xs text-[var(--text-muted)] mb-1">{col.name}</div>

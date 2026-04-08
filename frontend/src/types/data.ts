@@ -31,13 +31,17 @@ export interface Patient {
   stage: string;
   age_group: string;
   sex: string;
+  age?: number;
   senescence_mean: number;
+  celltype_counts?: Record<string, number>;
 }
 
 export interface DEGene {
   gene: string;
-  log2fc: number;
-  pval: number;
+  log2fc?: number;
+  logfc?: number;
+  score?: number;
+  pval?: number;
   pval_adj: number;
 }
 

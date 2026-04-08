@@ -130,16 +130,16 @@ Each level narrows the data scope, increases analytical granularity, and unlocks
 
 ### TODO
 
-- [ ] **P2-01** Create `components/level2/ClusterView.tsx` — main deck.gl view for Level 2. Applies CellType filter, renders ScatterplotLayer colored by CellType_Level2. Adaptive: HeatmapLayer if >50K visible, ScatterplotLayer if <50K.
-- [ ] **P2-02** Create `components/level2/ClusterSidebar.tsx` — left panel: clinical filters, sub-type breakdown chart, donor search
-- [ ] **P2-03** Create `components/level2/SubtypeBreakdown.tsx` — horizontal bar chart showing sub-cluster proportions within selected cell type. Clickable → drill to Level 3.
-- [ ] **P2-04** Create `components/level2/ClusterAnalysis.tsx` — bottom tabbed panel: sub-type proportions, senescence violin, patient table, DE waterfall
-- [ ] **P2-05** Create `components/charts/ViolinPlot.tsx` — Canvas 2D violin/box plot for senescence distribution per sub-type. Reusable for Level 3.
-- [ ] **P2-06** Create `components/charts/WaterfallChart.tsx` — Canvas 2D waterfall (bar chart sorted by log2FC). Click bar → drill to Level 3 with gene. Port from legacy `static/js/charts.js`.
-- [ ] **P2-07** Create `components/charts/PatientTable.tsx` — sortable table filtered to current cell type. Columns: donor_id, n_cells, IDH, stage, age, sex, senescence_mean. Click row → highlight donor on map.
-- [ ] **P2-08** Modify `stores/filterStore.ts` — add `setCellTypeFilter(cellType: string)` action that auto-applies when entering Level 2 from Level 1 drill-down
-- [ ] **P2-09** Create `hooks/useClusterStats.ts` — computes sub-cluster centroids, proportions, and senescence stats from filtered data (client-side, memoized)
-- [ ] **P2-10** Modify `stores/dataStore.ts` — add lazy loading: full cell Arrow IPC data loaded on first Level 2 entry (not at app init). Show progress indicator during load.
+- [x] **P2-01** Create `components/level2/ClusterView.tsx` — main deck.gl view for Level 2. Applies CellType filter, renders ScatterplotLayer colored by CellType_Level2. Adaptive: HeatmapLayer if >50K visible, ScatterplotLayer if <50K.
+- [x] **P2-02** Create `components/level2/ClusterSidebar.tsx` — left panel: clinical filters, sub-type breakdown chart, donor search
+- [x] **P2-03** Create `components/level2/SubtypeBreakdown.tsx` — horizontal bar chart showing sub-cluster proportions within selected cell type. Clickable → drill to Level 3.
+- [x] **P2-04** Create `components/level2/ClusterAnalysis.tsx` — bottom tabbed panel: sub-type proportions, senescence violin, patient table, DE waterfall
+- [x] **P2-05** Create `components/charts/ViolinPlot.tsx` — Canvas 2D violin/box plot for senescence distribution per sub-type. Reusable for Level 3.
+- [x] **P2-06** Create `components/charts/WaterfallChart.tsx` — Canvas 2D waterfall (bar chart sorted by log2FC). Click bar → drill to Level 3 with gene. Port from legacy `static/js/charts.js`.
+- [x] **P2-07** Create `components/charts/PatientTable.tsx` — sortable table filtered to current cell type. Columns: donor_id, n_cells, IDH, stage, age, sex, senescence_mean. Click row → highlight donor on map.
+- [x] **P2-08** Modify `stores/filterStore.ts` — add `setCellTypeFilter(cellType: string)` action that auto-applies when entering Level 2 from Level 1 drill-down
+- [x] **P2-09** Create `hooks/useClusterStats.ts` — computes sub-cluster centroids, proportions, and senescence stats from filtered data (client-side, memoized)
+- [x] **P2-10** Modify `stores/dataStore.ts` — add lazy loading: full cell Arrow IPC data loaded on first Level 2 entry (not at app init). Show progress indicator during load.
 
 ---
 

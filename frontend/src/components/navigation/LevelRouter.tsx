@@ -2,6 +2,9 @@ import { useNavigationStore } from '../../stores/navigationStore';
 import { GlobalSidebar } from '../level1/GlobalSidebar';
 import { HexbinMap } from '../level1/HexbinMap';
 import { SummaryStatsBar } from '../level1/SummaryStatsBar';
+import { ClusterAnalysis } from '../level2/ClusterAnalysis';
+import { ClusterSidebar } from '../level2/ClusterSidebar';
+import { ClusterView } from '../level2/ClusterView';
 import { LeftPanel } from '../layout/LeftPanel';
 import { AnalysisPanel } from '../layout/AnalysisPanel';
 import { UmapView } from '../map/UmapView';
@@ -39,10 +42,13 @@ export function LevelRouter() {
 
   if (currentLevel === 2) {
     return (
-      <PlaceholderLevel
-        title="Level 2: Sub-cluster Drill-down"
-        description="Cell-level data is now lazy-loaded on first entry. The detailed Level 2 panels are the next TODO batch."
-      />
+      <div className="flex flex-1 overflow-hidden">
+        <ClusterSidebar />
+        <div className="flex flex-1 flex-col">
+          <ClusterView />
+          <ClusterAnalysis />
+        </div>
+      </div>
     );
   }
 

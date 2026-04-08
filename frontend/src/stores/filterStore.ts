@@ -11,6 +11,7 @@ interface FilterStoreState {
 
   initFilters: (schema: Schema, metaColumns: Record<string, Uint8Array>) => void;
   toggleCategory: (column: string, catIdx: number) => void;
+  setCellTypeFilter: (cellType: string | null) => void;
   highlightDonor: (donorIdx: number | null) => void;
   hasActiveFilters: () => boolean;
 }
@@ -20,6 +21,7 @@ const FILTERABLE = ['CellType', 'CellType_Level2', 'IDH', 'stage', 'age_Group556
 
 let _metaColumnsRef: Record<string, Uint8Array> = {};
 let _nCells = 0;
+let _schemaRef: Schema | null = null;
 
 function rebuildMask(
   activeFilters: Record<string, Set<number>>,
@@ -62,6 +64,7 @@ export const useFilterStore = create<FilterStoreState>((set, get) => ({
   filterableColumns: FILTERABLE,
 
   initFilters: (schema, metaColumns) => {
+    _schemaRef = schema;
     _nCells = schema.n_cells;
     _metaColumnsRef = metaColumns as Record<string, Uint8Array>;
     const mask = new Uint8Array(_nCells).fill(1);
@@ -80,6 +83,24 @@ export const useFilterStore = create<FilterStoreState>((set, get) => ({
     const newFilters = { ...state.activeFilters, [column]: next };
     const mask = rebuildMask(newFilters, state.highlightedDonor);
     set({ activeFilters: newFilters, filterMask: mask });
+  },
+
+  setCellTypeFilter: (cellType) => {
+    const state = get();
+    const categories = _schemaRef?.columns.find((column) => column.name === 'CellType')?.categories ?? [];
+    const nextFilters = { ...state.activeFilters };
+
+    if (!cellType) {
+      delete nextFilters.CellType;
+    } else {
+      const idx = categories.indexOf(cellType);
+      if (idx >= 0) {
+        nextFilters.CellType = new Set([idx]);
+      }
+    }
+
+    const mask = rebuildMask(nextFilters, state.highlightedDonor);
+    set({ activeFilters: nextFilters, filterMask: mask });
   },
 
   highlightDonor: (donorIdx) => {
