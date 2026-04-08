@@ -1,0 +1,281 @@
+/* GBM Senescence Atlas — Dark Mode UI */
+:root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --accent: #58a6ff;
+    --accent2: #3fb950;
+    --danger: #f85149;
+    --senescence-low: #0d1117;
+    --senescence-high: #ff6b35;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+    height: 100vh;
+}
+
+/* Stats Bar */
+#stats-bar {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 8px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    height: 44px;
+    z-index: 10;
+}
+
+.stat-item { display: flex; align-items: center; gap: 6px; }
+.stat-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-value { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.toggle-item { margin-left: auto; }
+.toggle-label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12px; color: var(--text-dim); }
+.toggle-label input { accent-color: var(--accent); }
+
+/* Main Layout */
+#main-layout {
+    display: flex;
+    height: calc(100vh - 44px);
+}
+
+/* Left Panel */
+#left-panel {
+    width: 280px;
+    min-width: 280px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+#left-panel section {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+#left-panel h3 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+}
+
+/* Filter controls */
+.filter-group { margin-bottom: 10px; }
+.filter-group label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+.filter-checkboxes { display: flex; flex-wrap: wrap; gap: 4px; }
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    font-size: 11px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+}
+.filter-chip.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+.filter-chip:hover { border-color: var(--accent); }
+
+/* Color mode */
+#color-panel select, #gene-input, #patient-search {
+    width: 100%;
+    padding: 6px 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-size: 12px;
+    margin-bottom: 6px;
+}
+#gene-search-box { display: flex; gap: 4px; }
+#gene-search-box input { flex: 1; }
+#gene-load-btn {
+    padding: 6px 10px;
+    background: var(--accent);
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 11px;
+}
+
+/* Patient table */
+#patient-table-wrap {
+    max-height: 300px;
+    overflow-y: auto;
+}
+#patient-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+}
+#patient-table th {
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    padding: 4px 6px;
+    text-align: left;
+    color: var(--text-dim);
+    font-weight: 600;
+    cursor: pointer;
+}
+#patient-table td {
+    padding: 3px 6px;
+    border-top: 1px solid var(--border);
+}
+#patient-table tr:hover { background: var(--surface2); }
+#patient-table tr.selected { background: rgba(88, 166, 255, 0.15); }
+
+/* Legend */
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    margin-bottom: 3px;
+}
+.legend-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+/* Main content */
+#main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+#umap-container {
+    flex: 1;
+    position: relative;
+    min-height: 0;
+}
+
+#deck-canvas {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+#split-controls {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 5;
+}
+#split-toggle {
+    padding: 6px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    cursor: pointer;
+    font-size: 12px;
+}
+#split-toggle:hover { border-color: var(--accent); }
+
+/* Analysis Panel */
+#analysis-panel {
+    height: 280px;
+    min-height: 280px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+}
+
+#analysis-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+}
+.tab-btn {
+    padding: 8px 16px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 12px;
+}
+.tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+.tab-content { display: none; flex: 1; padding: 8px; overflow: auto; }
+.tab-content.active { display: flex; align-items: center; }
+
+#waterfall-controls {
+    margin-right: 8px;
+}
+#waterfall-controls select {
+    padding: 4px 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-size: 12px;
+}
+
+/* Loading overlay */
+#loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(13, 17, 23, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+#loading-overlay.hidden { display: none; }
+.loader { text-align: center; }
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#loading-text { font-size: 14px; color: var(--text-dim); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }

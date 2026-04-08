@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GBM Senescence Atlas</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://unpkg.com/deck.gl@9.1.8/dist.min.js"></script>
+</head>
+<body>
+    <!-- Stats Bar -->
+    <header id="stats-bar">
+        <div class="stat-item">
+            <span class="stat-label">Total Cells</span>
+            <span class="stat-value" id="stat-total">--</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Filtered</span>
+            <span class="stat-value" id="stat-filtered">--</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Visible</span>
+            <span class="stat-value" id="stat-visible">--</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Mode</span>
+            <span class="stat-value" id="stat-mode">Density</span>
+        </div>
+        <div class="stat-item toggle-item">
+            <label class="toggle-label">
+                <input type="checkbox" id="downsample-toggle">
+                <span>1% Downsample</span>
+            </label>
+        </div>
+    </header>
+
+    <div id="main-layout">
+        <!-- Left Panel -->
+        <aside id="left-panel">
+            <!-- Filters -->
+            <section id="filter-panel">
+                <h3>Filters</h3>
+                <div id="filter-controls"></div>
+            </section>
+
+            <!-- Color Mode -->
+            <section id="color-panel">
+                <h3>Color By</h3>
+                <select id="color-mode">
+                    <option value="celltype">Cell Type</option>
+                    <option value="senescence">Senescence Score</option>
+                    <option value="celltype2">Cell Type (Level 2)</option>
+                    <option value="gene">Gene Expression</option>
+                </select>
+                <div id="gene-search-box" style="display:none;">
+                    <input type="text" id="gene-input" placeholder="Gene name (e.g. CDKN1A)">
+                    <button id="gene-load-btn">Load</button>
+                </div>
+            </section>
+
+            <!-- Patient Matrix (Phase 2) -->
+            <section id="patient-panel">
+                <h3>Patients <span id="patient-count"></span></h3>
+                <div id="patient-search-box">
+                    <input type="text" id="patient-search" placeholder="Search patients...">
+                </div>
+                <div id="patient-table-wrap">
+                    <table id="patient-table">
+                        <thead>
+                            <tr>
+                                <th>Donor</th>
+                                <th>Cells</th>
+                                <th>IDH</th>
+                                <th>Age</th>
+                                <th>Sen.</th>
+                            </tr>
+                        </thead>
+                        <tbody id="patient-tbody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Legend -->
+            <section id="legend-panel">
+                <h3>Legend</h3>
+                <div id="legend-content"></div>
+            </section>
+        </aside>
+
+        <!-- Main Content -->
+        <main id="main-content">
+            <!-- UMAP Canvas Area -->
+            <div id="umap-container">
+                <div id="deck-canvas"></div>
+                <!-- Split view toggle -->
+                <div id="split-controls" style="display:none;">
+                    <button id="split-toggle">Split View</button>
+                    <span id="split-label"></span>
+                </div>
+            </div>
+
+            <!-- Bottom Analysis Panel (Phase 3) -->
+            <div id="analysis-panel">
+                <div id="analysis-tabs">
+                    <button class="tab-btn active" data-tab="waterfall">DE Genes</button>
+                    <button class="tab-btn" data-tab="correlation">Correlation</button>
+                </div>
+                <div id="tab-waterfall" class="tab-content active">
+                    <div id="waterfall-controls">
+                        <select id="de-celltype"></select>
+                    </div>
+                    <canvas id="waterfall-canvas" width="800" height="250"></canvas>
+                </div>
+                <div id="tab-correlation" class="tab-content">
+                    <canvas id="correlation-canvas" width="500" height="500"></canvas>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading overlay -->
+    <div id="loading-overlay">
+        <div class="loader">
+            <div class="spinner"></div>
+            <p id="loading-text">Loading GBM Senescence Atlas...</p>
+        </div>
+    </div>
+
+    <script src="/static/js/data.js"></script>
+    <script src="/static/js/layers.js"></script>
+    <script src="/static/js/filters.js"></script>
+    <script src="/static/js/panels.js"></script>
+    <script src="/static/js/charts.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

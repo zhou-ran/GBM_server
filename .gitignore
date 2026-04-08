@@ -1,0 +1,28 @@
+# Data files (large)
+data/
+*.h5ad
+*.h5
+
+# Processed outputs
+data/processed/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Environment
+.env
+.venv/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code
+.claude/
