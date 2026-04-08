@@ -34,7 +34,7 @@ export function Legend() {
     );
   }
 
-  if (colorMode === 'senescence' || colorMode === 'gene' || colorMode === 'age' || colorMode === 'idh') {
+  if (colorMode === 'senescence' || colorMode === 'gene' || colorMode === 'signature' || colorMode === 'age' || colorMode === 'idh') {
     return (
       <div className="flex flex-col gap-1">
         <h3 className="text-xs font-semibold uppercase text-[var(--text-muted)] tracking-wider">

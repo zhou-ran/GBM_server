@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gbm-atlas-backend"
+version = "0.1.0"
+description = "GBM Senescence Atlas API server"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pyarrow>=17.0",
+    "numpy>=1.26",
+    "anndata>=0.10",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "httpx"]

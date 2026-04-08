@@ -5,6 +5,8 @@ import { SummaryStatsBar } from '../level1/SummaryStatsBar';
 import { ClusterAnalysis } from '../level2/ClusterAnalysis';
 import { ClusterSidebar } from '../level2/ClusterSidebar';
 import { ClusterView } from '../level2/ClusterView';
+import { GeneExplorer } from '../level3/GeneExplorer';
+import { GeneSidebar } from '../level3/GeneSidebar';
 import { LeftPanel } from '../layout/LeftPanel';
 import { AnalysisPanel } from '../layout/AnalysisPanel';
 import { UmapView } from '../map/UmapView';
@@ -54,10 +56,10 @@ export function LevelRouter() {
 
   if (currentLevel === 3) {
     return (
-      <PlaceholderLevel
-        title="Level 3: Gene & Signature"
-        description="Navigation context is wired. The gene search, signature builder, and correlation matrix remain pending."
-      />
+      <div className="flex flex-1 overflow-hidden">
+        <GeneSidebar />
+        <GeneExplorer />
+      </div>
     );
   }
 

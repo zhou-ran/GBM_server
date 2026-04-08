@@ -9,5 +9,7 @@ export const ENDPOINTS = {
   de: '/api/de',
   correlation: '/api/correlation',
   stats: '/api/stats',
+  geneSearch: (query: string) => `/api/genes/search?q=${encodeURIComponent(query)}`,
+  signature: '/api/signature',
   gene: (name: string) => `/api/gene/${encodeURIComponent(name)}`,
 } as const;

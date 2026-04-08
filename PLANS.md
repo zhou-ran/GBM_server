@@ -198,18 +198,18 @@ Each level narrows the data scope, increases analytical granularity, and unlocks
 
 ### TODO
 
-- [ ] **P3-01** Create `components/level3/GeneExplorer.tsx` — main Level 3 layout: 2×2 grid with Feature Plot, Violin, Dot Plot, Correlation scatter
-- [ ] **P3-02** Create `components/level3/GeneSidebar.tsx` — left panel: gene search with autocomplete, signature presets, selected gene info
-- [ ] **P3-03** Create `components/level3/FeaturePlot.tsx` — deck.gl ScatterplotLayer colored by gene expression (blue→yellow→red). Reuses filtered cell positions from Level 2.
-- [ ] **P3-04** Create `components/charts/ViolinPlotMulti.tsx` — multi-group violin plot: gene expression split by age group / IDH / senescent class. Canvas 2D.
-- [ ] **P3-05** Create `components/charts/DotPlot.tsx` — genes (rows) × sub-clusters (columns). Circle size = % cells expressing. Circle color = mean expression. Canvas 2D.
-- [ ] **P3-06** Create `components/charts/CorrelationScatter.tsx` — gene expression (x) vs senescence score (y) per cell. Subsample to ~5K points for performance. Show Spearman r + regression line.
-- [ ] **P3-07** Create `components/level3/SignaturePresets.tsx` — radio buttons for curated senescence gene sets. Selecting a preset triggers signature score computation.
-- [ ] **P3-08** Add backend endpoint `POST /api/signature` in `backend/server/routes.py` — accepts `{ genes: string[] }`, computes mean normalized expression across genes per cell, returns Arrow IPC (Float32 column).
-- [ ] **P3-09** Add `backend/server/signature_service.py` — loads multiple gene columns from h5ad, normalizes, computes mean score, serializes to Arrow IPC. Cache result by gene set hash.
-- [ ] **P3-10** Create `components/level3/GeneAutocomplete.tsx` — input with debounced autocomplete against gene index. Backend already has gene_index in data_cache.
-- [ ] **P3-11** Add backend endpoint `GET /api/genes/search?q=APO` in `backend/server/routes.py` — returns top 20 matching gene names from gene_index for autocomplete.
-- [ ] **P3-12** Modify `stores/colorStore.ts` — add `loadSignature(genes: string[])` action that calls `/api/signature` and stores result as `signatureScore: Float32Array`
+- [x] **P3-01** Create `components/level3/GeneExplorer.tsx` — main Level 3 layout: 2×2 grid with Feature Plot, Violin, Dot Plot, Correlation scatter
+- [x] **P3-02** Create `components/level3/GeneSidebar.tsx` — left panel: gene search with autocomplete, signature presets, selected gene info
+- [x] **P3-03** Create `components/level3/FeaturePlot.tsx` — deck.gl ScatterplotLayer colored by gene expression (blue→yellow→red). Reuses filtered cell positions from Level 2.
+- [x] **P3-04** Create `components/charts/ViolinPlotMulti.tsx` — multi-group violin plot: gene expression split by age group / IDH / senescent class. Canvas 2D.
+- [x] **P3-05** Create `components/charts/DotPlot.tsx` — genes (rows) × sub-clusters (columns). Circle size = % cells expressing. Circle color = mean expression. Canvas 2D.
+- [x] **P3-06** Create `components/charts/CorrelationScatter.tsx` — gene expression (x) vs senescence score (y) per cell. Subsample to ~5K points for performance. Show Spearman r + regression line.
+- [x] **P3-07** Create `components/level3/SignaturePresets.tsx` — radio buttons for curated senescence gene sets. Selecting a preset triggers signature score computation.
+- [x] **P3-08** Add backend endpoint `POST /api/signature` in `backend/server/routes.py` — accepts `{ genes: string[] }`, computes mean normalized expression across genes per cell, returns Arrow IPC (Float32 column).
+- [x] **P3-09** Add `backend/server/signature_service.py` — loads multiple gene columns from h5ad, normalizes, computes mean score, serializes to Arrow IPC. Cache result by gene set hash.
+- [x] **P3-10** Create `components/level3/GeneAutocomplete.tsx` — input with debounced autocomplete against gene index. Backend already has gene_index in data_cache.
+- [x] **P3-11** Add backend endpoint `GET /api/genes/search?q=APO` in `backend/server/routes.py` — returns top 20 matching gene names from gene_index for autocomplete.
+- [x] **P3-12** Modify `stores/colorStore.ts` — add `loadSignature(genes: string[])` action that calls `/api/signature` and stores result as `signatureScore: Float32Array`
 
 ---
 

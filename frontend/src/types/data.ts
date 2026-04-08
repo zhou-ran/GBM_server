@@ -55,6 +55,6 @@ export interface GlobalStats {
   by_column: Record<string, Record<string, number>>;
 }
 
-export type ColorMode = 'celltype' | 'celltype2' | 'senescence' | 'gene' | 'age' | 'idh';
+export type ColorMode = 'celltype' | 'celltype2' | 'senescence' | 'gene' | 'signature' | 'age' | 'idh';
 
 export type RenderMode = 'overview' | 'density' | 'detail';
