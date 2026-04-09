@@ -18,7 +18,7 @@ export function SignaturePresets() {
           key={label}
           type="button"
           className={`w-full rounded-xl border px-3 py-2 text-left text-sm ${
-            signatureName === label ? 'border-[var(--accent)] bg-[var(--accent)]/10' : 'border-[var(--border)] bg-black/10'
+            signatureName === label ? 'border-[var(--accent)] bg-[var(--accent)]/10' : 'border-[var(--border)] bg-[var(--control-bg)]'
           }`}
           onClick={() => loadSignature([...genes], label)}
         >

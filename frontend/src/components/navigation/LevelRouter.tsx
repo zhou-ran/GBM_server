@@ -17,7 +17,7 @@ function PlaceholderLevel({ title, description }: { title: string; description: 
       <LeftPanel />
       <div className="flex flex-1 flex-col">
         <UmapView />
-        <div className="border-t border-[var(--border)] bg-[#0e1621] p-4 text-sm text-[var(--text-muted)]">
+        <div className="border-t border-[var(--border)] bg-[var(--surface)] p-4 text-sm text-[var(--text-muted)]">
           <div className="font-medium text-[var(--text)]">{title}</div>
           <div className="mt-1">{description}</div>
         </div>

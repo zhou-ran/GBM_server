@@ -26,7 +26,7 @@
             <span class="stat-label">Mode</span>
             <span class="stat-value" id="stat-mode">Density</span>
         </div>
-        <div class="stat-item toggle-item">
+        <div class="stat-item toggle-item" hidden>
             <label class="toggle-label">
                 <input type="checkbox" id="downsample-toggle">
                 <span>1% Downsample</span>
@@ -93,7 +93,7 @@
             <div id="umap-container">
                 <div id="deck-canvas"></div>
                 <!-- Split view toggle -->
-                <div id="split-controls" style="display:none;">
+                <div id="split-controls" style="display:none;" hidden>
                     <button id="split-toggle">Split View</button>
                     <span id="split-label"></span>
                 </div>

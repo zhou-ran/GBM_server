@@ -7,7 +7,7 @@ export function MiniHistogram({ values, color = 'var(--accent)' }: MiniHistogram
   const max = Math.max(...values, 1);
 
   return (
-    <div className="flex h-16 items-end gap-1 rounded-xl border border-[var(--border)] bg-black/15 px-2 py-2">
+    <div className="flex h-16 items-end gap-1 rounded-xl border border-[var(--border)] bg-[var(--control-bg)] px-2 py-2">
       {values.map((value, index) => (
         <div
           key={`${index}-${value}`}

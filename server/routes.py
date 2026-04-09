@@ -1,10 +1,10 @@
 """API routes for serving preprocessed data."""
 import os
 import json
+from pathlib import Path
 import numpy as np
 from fastapi import APIRouter, Query
-from fastapi.responses import Response, JSONResponse
-from scipy.spatial import cKDTree
+from fastapi.responses import Response, JSONResponse, FileResponse
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(BASE_DIR, 'data', 'processed')
@@ -13,8 +13,8 @@ router = APIRouter()
 
 # Lazy-loaded globals
 _coords = None
-_kdtree = None
 _schema = None
+_gene_index = None
 
 
 def _get_schema():
@@ -32,23 +32,38 @@ def _get_coords():
     return _coords
 
 
-def _get_kdtree():
-    global _kdtree
-    if _kdtree is None:
-        _kdtree = cKDTree(_get_coords())
-    return _kdtree
+def _resolve_data_path(path: str) -> Path:
+    return Path(DATA_DIR) / path
 
 
 def _binary_response(path: str):
-    with open(os.path.join(DATA_DIR, path), 'rb') as f:
-        data = f.read()
-    return Response(content=data, media_type='application/octet-stream')
+    resolved = _resolve_data_path(path)
+    if not resolved.exists():
+        return JSONResponse(content={'error': f'{path} not found'}, status_code=404)
+    return FileResponse(resolved, media_type='application/octet-stream')
 
 
 def _json_response(path: str):
-    with open(os.path.join(DATA_DIR, path)) as f:
+    resolved = _resolve_data_path(path)
+    if not resolved.exists():
+        return JSONResponse(content={'error': f'{path} not found'}, status_code=404)
+    with open(resolved) as f:
         data = json.load(f)
     return JSONResponse(content=data)
+
+
+def _get_gene_index():
+    global _gene_index
+    if _gene_index is None:
+        import anndata as ad
+
+        h5ad_path = os.path.join(BASE_DIR, 'data', 'AllSample_obj.h5ad')
+        adata = ad.read_h5ad(h5ad_path, backed='r')
+        try:
+            _gene_index = {str(name).upper(): idx for idx, name in enumerate(adata.var_names)}
+        finally:
+            adata.file.close()
+    return _gene_index
 
 
 # --- Binary data endpoints ---
@@ -103,6 +118,11 @@ async def get_downsample():
     return _binary_response('downsample.bin')
 
 
+@router.get("/downsample_idx")
+async def get_downsample_idx():
+    return _binary_response('downsample_idx.bin')
+
+
 # --- Dynamic endpoints ---
 
 @router.get("/region")
@@ -124,21 +144,24 @@ async def get_region(
 @router.get("/stats")
 async def get_stats():
     """Global cell count statistics."""
+    stats_path = _resolve_data_path('stats.json')
+    if stats_path.exists():
+        return _json_response('stats.json')
+
     schema = _get_schema()
     stats = {'total': schema['n_cells'], 'by_column': {}}
-    n = schema['n_cells']
     meta = np.fromfile(os.path.join(DATA_DIR, 'meta.bin'), dtype=np.uint8)
 
-    offset = 0
     for col in schema['columns']:
-        if col.get('dtype') == 'uint16':
-            break
-        codes = meta[offset:offset + n]
+        if col.get('dtype', 'uint8') != 'uint8':
+            continue
+        start = col.get('byte_offset', 0)
+        end = start + col.get('byte_length', schema['n_cells'])
+        codes = meta[start:end]
         counts = {}
         for i, cat in enumerate(col['categories']):
             counts[cat] = int((codes == i).sum())
         stats['by_column'][col['name']] = counts
-        offset += n
 
     return JSONResponse(content=stats)
 
@@ -146,25 +169,31 @@ async def get_stats():
 @router.get("/gene/{gene_name}")
 async def get_gene(gene_name: str):
     """Get expression values for a specific gene (on-demand from h5ad)."""
+    normalized_gene = gene_name.upper()
     # Check pre-extracted genes first
-    gene_path = os.path.join(DATA_DIR, 'gene_density', f'{gene_name}.bin')
+    gene_path = os.path.join(DATA_DIR, 'gene_density', f'{normalized_gene}.bin')
     if os.path.exists(gene_path):
-        return _binary_response(f'gene_density/{gene_name}.bin')
+        return _binary_response(f'gene_density/{normalized_gene}.bin')
 
     # Fall back to reading from h5ad
     import anndata as ad
     h5ad_path = os.path.join(BASE_DIR, 'data', 'AllSample_obj.h5ad')
     try:
+        gene_index = _get_gene_index()
+        gene_idx = gene_index.get(normalized_gene)
+        if gene_idx is None:
+            return JSONResponse(content={'error': f'Gene {normalized_gene} not found'}, status_code=404)
+
         adata = ad.read_h5ad(h5ad_path, backed='r')
-        if gene_name not in adata.var_names:
-            return JSONResponse(content={'error': f'Gene {gene_name} not found'}, status_code=404)
-        gene_idx = list(adata.var_names).index(gene_name)
-        expr = np.array(adata.X[:, gene_idx].toarray().flatten(), dtype=np.float32)
+        try:
+            expr = np.asarray(adata.X[:, gene_idx].toarray()).ravel().astype(np.float32)
+        finally:
+            adata.file.close()
+
         # Normalize to [0, 1]
         emax = expr.max()
         if emax > 0:
             expr = expr / emax
-        adata.file.close()
 
         # Cache for next time
         os.makedirs(os.path.join(DATA_DIR, 'gene_density'), exist_ok=True)

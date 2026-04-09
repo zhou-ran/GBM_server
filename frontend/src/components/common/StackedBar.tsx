@@ -13,7 +13,7 @@ export function StackedBar({ items, onSelect }: StackedBarProps) {
   const total = items.reduce((sum, item) => sum + item.value, 0);
 
   return (
-    <div className="flex h-4 overflow-hidden rounded-full bg-white/5">
+    <div className="flex h-4 overflow-hidden rounded-full bg-[var(--control-bg)]">
       {items.map((item) => {
         const width = total > 0 ? `${(item.value / total) * 100}%` : '0%';
         return (

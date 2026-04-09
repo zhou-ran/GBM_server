@@ -8,7 +8,13 @@ const Charts = (() => {
         onGeneClick = onGeneSelect;
         const select = document.getElementById('de-celltype');
         select.innerHTML = '';
-        Object.keys(deResults).forEach(ct => {
+        const cellTypes = Object.keys(deResults || {});
+        if (cellTypes.length === 0) {
+            drawWaterfall([]);
+            select.disabled = true;
+            return;
+        }
+        cellTypes.forEach(ct => {
             const opt = document.createElement('option');
             opt.value = ct;
             opt.textContent = ct;
@@ -17,7 +23,7 @@ const Charts = (() => {
         select.addEventListener('change', () => drawWaterfall(deResults[select.value]));
 
         // Draw first cell type
-        const firstCt = Object.keys(deResults)[0];
+        const firstCt = cellTypes[0];
         if (firstCt) drawWaterfall(deResults[firstCt]);
     }
 
@@ -99,8 +105,8 @@ const Charts = (() => {
     function drawCorrelation(corrData) {
         const canvas = document.getElementById('correlation-canvas');
         const ctx = canvas.getContext('2d');
-        const labels = corrData.labels;
-        const matrix = corrData.matrix;
+        const labels = corrData.labels || [];
+        const matrix = corrData.matrix || [];
         const n = labels.length;
 
         const pad = { top: 10, bottom: 80, left: 100, right: 10 };
@@ -111,6 +117,13 @@ const Charts = (() => {
 
         ctx.fillStyle = '#161b22';
         ctx.fillRect(0, 0, W, H);
+        if (n === 0) {
+            ctx.fillStyle = '#8b949e';
+            ctx.font = '12px system-ui';
+            ctx.textAlign = 'center';
+            ctx.fillText('No correlation data', W / 2, H / 2);
+            return;
+        }
 
         for (let i = 0; i < n; i++) {
             for (let j = 0; j < n; j++) {

@@ -22,6 +22,22 @@ META_COLS = [
 IDH_MAP = {'WT': 'WT', 'IDH wildtype': 'WT', 'IDH': 'IDH'}
 
 
+def _append_column(schema, name, categories, dtype, n_cells):
+    itemsize = np.dtype(dtype).itemsize
+    byte_offset = schema['meta_layout']['total_bytes']
+    byte_length = n_cells * itemsize
+    schema['columns'].append({
+        'name': name,
+        'categories': categories,
+        'n_categories': len(categories),
+        'dtype': dtype,
+        'itemsize': itemsize,
+        'byte_offset': byte_offset,
+        'byte_length': byte_length,
+    })
+    schema['meta_layout']['total_bytes'] += byte_length
+
+
 def run():
     print("Step 1: Extracting coordinates and metadata...")
     os.makedirs(OUT_DIR, exist_ok=True)
@@ -38,10 +54,18 @@ def run():
 
     # Extract and encode metadata
     print("  Encoding metadata...")
-    schema = {'n_cells': n_cells, 'columns': [], 'umap_bounds': {
-        'xmin': float(umap[:,0].min()), 'xmax': float(umap[:,0].max()),
-        'ymin': float(umap[:,1].min()), 'ymax': float(umap[:,1].max()),
-    }}
+    schema = {
+        'n_cells': n_cells,
+        'columns': [],
+        'umap_bounds': {
+            'xmin': float(umap[:, 0].min()), 'xmax': float(umap[:, 0].max()),
+            'ymin': float(umap[:, 1].min()), 'ymax': float(umap[:, 1].max()),
+        },
+        'meta_layout': {
+            'format': 'column-major',
+            'total_bytes': 0,
+        },
+    }
 
     meta_arrays = []
     for col in META_COLS:
@@ -53,11 +77,7 @@ def run():
         cat_to_idx = {c: i for i, c in enumerate(categories)}
         encoded = series.map(cat_to_idx).values.astype(np.uint8)
         meta_arrays.append(encoded)
-        schema['columns'].append({
-            'name': col,
-            'categories': categories,
-            'n_categories': len(categories),
-        })
+        _append_column(schema, col, categories, 'uint8', n_cells)
         print(f"    {col}: {len(categories)} categories → {categories}")
 
     # Also extract donor_id and Sample as uint16 (>256 unique values)
@@ -67,12 +87,7 @@ def run():
         cat_to_idx = {c: i for i, c in enumerate(categories)}
         encoded = series.map(cat_to_idx).values.astype(np.uint16)
         meta_arrays.append(encoded.view(np.uint8))  # store as raw bytes
-        schema['columns'].append({
-            'name': col,
-            'categories': categories,
-            'n_categories': len(categories),
-            'dtype': 'uint16',
-        })
+        _append_column(schema, col, categories, 'uint16', n_cells)
         print(f"    {col}: {len(categories)} categories (uint16)")
 
     meta_bin = np.concatenate([a.ravel() for a in meta_arrays])

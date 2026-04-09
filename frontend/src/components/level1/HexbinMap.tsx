@@ -5,9 +5,10 @@ import { PolygonLayer, TextLayer } from '@deck.gl/layers';
 import { useDataStore } from '../../stores/dataStore';
 import { useColorStore } from '../../stores/colorStore';
 import { useNavigationStore } from '../../stores/navigationStore';
+import { useThemeStore } from '../../stores/themeStore';
 import { useViewStore } from '../../stores/viewStore';
 import { categoricalColor } from '../../lib/colorScales';
-import { senescenceColor } from '../../lib/colors';
+import { mapBackground, senescenceColor, textLabelTheme } from '../../lib/colors';
 import { Tooltip } from '../common/Tooltip';
 import type { HexbinBin } from '../../types/data';
 
@@ -28,7 +29,9 @@ export function HexbinMap() {
   const viewState = useViewStore((s) => s.viewState);
   const setViewState = useViewStore((s) => s.setViewState);
   const drillDown = useNavigationStore((s) => s.drillDown);
+  const theme = useThemeStore((s) => s.theme);
   const [hovered, setHovered] = useState<{ x: number; y: number; bin: HexbinBin } | null>(null);
+  const labelTheme = textLabelTheme(theme);
 
   const bins = hexbin?.bins ?? [];
   const cellTypeNames = hexbin?.celltype_names ?? schema?.columns.find((column) => column.name === 'CellType')?.categories ?? [];
@@ -49,7 +52,7 @@ export function HexbinMap() {
         pickable: true,
         lineWidthMinPixels: 1,
         getPolygon: (d: (typeof polygonData)[number]) => d.polygon,
-        getLineColor: [255, 255, 255, 20],
+        getLineColor: theme === 'dark' ? [255, 255, 255, 20] : [31, 35, 40, 35],
         getFillColor: (d: (typeof polygonData)[number]) => {
           if (colorMode === 'senescence') return senescenceColor(d.senescence_mean);
           return categoricalColor(d.dominant_celltype);
@@ -73,9 +76,9 @@ export function HexbinMap() {
         getPosition: (d) => [d.x, d.y],
         getText: (d) => d.name,
         getSize: 14,
-        getColor: [255, 255, 255, 235],
+        getColor: labelTheme.text,
         fontWeight: 700,
-        outlineColor: [8, 12, 18, 240],
+        outlineColor: labelTheme.outline,
         outlineWidth: 3,
         onClick: (info: PickingInfo<(typeof centroids)[number]>) => {
           if (!info.object) return;
@@ -83,7 +86,7 @@ export function HexbinMap() {
         },
       }),
     ];
-  }, [bins, cellTypeNames, centroids, colorMode, drillDown, hexbin?.radius]);
+  }, [bins, cellTypeNames, centroids, colorMode, drillDown, hexbin?.radius, labelTheme.outline, labelTheme.text, theme]);
 
   return (
     <div className="relative flex-1">
@@ -91,6 +94,7 @@ export function HexbinMap() {
         views={VIEW}
         controller={true}
         viewState={viewState}
+        style={{ background: mapBackground(theme) }}
         layers={layers}
         onViewStateChange={({ viewState: next }) =>
           setViewState({
@@ -100,7 +104,7 @@ export function HexbinMap() {
             zoom: typeof next.zoom === 'number' ? next.zoom : viewState.zoom,
           })}
       />
-      <div className="pointer-events-none absolute left-4 top-4 rounded-full border border-white/10 bg-[#0e1621]/90 px-3 py-1 text-xs text-[var(--text-muted)]">
+      <div className="pointer-events-none absolute left-4 top-4 rounded-full border border-[var(--border)] bg-[var(--surface-overlay)] px-3 py-1 text-xs text-[var(--text-muted)] shadow-sm">
         {bins.length.toLocaleString()} hexbins • click a region to drill down
       </div>
       {hovered && (

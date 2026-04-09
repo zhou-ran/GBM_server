@@ -13,7 +13,7 @@ export function CompositionChart({ counts }: CompositionChartProps) {
   const items = entries.map(([label, value], index) => ({ label, value, color: categoricalCss(index) }));
 
   return (
-    <section className="rounded-2xl border border-[var(--border)] bg-white/3 p-4">
+    <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-sm font-semibold">Cell Type Composition</h3>
         <span className="text-xs text-[var(--text-muted)]">{entries.length} classes</span>

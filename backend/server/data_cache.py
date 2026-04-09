@@ -107,6 +107,11 @@ class DataCache:
     @property
     def cells_ipc(self) -> bytes:
         if self._cells_ipc is None:
+            static_arrow = DATA_DIR / "cells.arrow"
+            if static_arrow.exists():
+                self._cells_ipc = static_arrow.read_bytes()
+                return self._cells_ipc
+
             from .arrow_io import build_cells_batch, serialize_ipc
 
             batch = build_cells_batch(

@@ -30,3 +30,18 @@ export function senescenceColor(value: number): [number, number, number, number]
   }
   return [r, g, b, 200];
 }
+
+export type TextLabelTheme = {
+  text: [number, number, number, number];
+  outline: [number, number, number, number];
+};
+
+export function textLabelTheme(theme: 'light' | 'dark'): TextLabelTheme {
+  return theme === 'dark'
+    ? { text: [255, 255, 255, 235], outline: [8, 12, 18, 240] }
+    : { text: [31, 35, 40, 240], outline: [255, 255, 255, 245] };
+}
+
+export function mapBackground(theme: 'light' | 'dark'): string {
+  return theme === 'dark' ? '#0d1117' : '#f6f8fa';
+}

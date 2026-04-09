@@ -4,15 +4,30 @@
 (async function() {
     const loadingText = document.getElementById('loading-text');
     const loadingOverlay = document.getElementById('loading-overlay');
+    const downsampleToggle = document.getElementById('downsample-toggle');
+    const splitControls = document.getElementById('split-controls');
 
-    // Load all data
-    await DataStore.loadAll(msg => { loadingText.textContent = msg; });
+    // Hide unfinished experimental UI until the backing data flow is completed.
+    if (downsampleToggle) {
+        downsampleToggle.closest('.toggle-item').hidden = true;
+    }
+    if (splitControls) {
+        splitControls.hidden = true;
+    }
+
+    try {
+        await DataStore.loadAll(msg => { loadingText.textContent = msg; });
+    } catch (error) {
+        loadingText.textContent = `Failed to load atlas data: ${error.message}`;
+        throw error;
+    }
 
     const schema = DataStore.getSchema();
     const coords = DataStore.getCoords();
-    const meta = DataStore.getMeta();
     const senescence = DataStore.getSenescence();
     const nCells = DataStore.getNCells();
+    const cellTypeCodes = DataStore.getMetaColumn('CellType');
+    const cellType2Codes = DataStore.getMetaColumn('CellType_Level2');
 
     // State
     let colorMode = 'celltype';
@@ -46,8 +61,8 @@
         getTooltip: ({object}) => {
             if (!object || object.index === undefined) return null;
             const i = object.index;
-            const ct = schema.columns[0].categories[meta[i]];
-            const ct2 = schema.columns[1].categories[meta[nCells + i]];
+            const ct = schema.columns[0].categories[cellTypeCodes ? cellTypeCodes[i] : -1] || 'Unknown';
+            const ct2 = schema.columns[1].categories[cellType2Codes ? cellType2Codes[i] : -1] || 'Unknown';
             const sen = senescence[i].toFixed(3);
             return {
                 html: `<b>${ct}</b> (${ct2})<br>Senescence: ${sen}`,
@@ -79,18 +94,7 @@
         const ymin = cy - halfH;
         const ymax = cy + halfH;
 
-        const mask = Filters.getMask();
-        let count = 0;
-        for (let i = 0; i < nCells; i++) {
-            if (mask && !mask[i]) continue;
-            const x = coords[i * 2];
-            const y = coords[i * 2 + 1];
-            if (x >= xmin && x <= xmax && y >= ymin && y <= ymax) {
-                count++;
-                if (count > 50000) return count; // Early exit for perf
-            }
-        }
-        return count;
+        return DataStore.countInBounds(xmin, xmax, ymin, ymax, Filters.getMask(), 50001);
     }
 
     // Update layers based on zoom level and filters
@@ -111,12 +115,15 @@
             // Detail mode: scatter plot
             document.getElementById('stat-mode').textContent = 'Detail';
             layers.push(Layers.createScatterLayer(
-                coords, meta, senescence, schema, mask, colorMode, currentGeneExpr
+                coords, cellTypeCodes, cellType2Codes, senescence, mask, colorMode, currentGeneExpr
             ));
+        } else if (!Filters.hasActiveFilters() && colorMode !== 'gene' && DataStore.getHexbin()) {
+            document.getElementById('stat-mode').textContent = 'Overview';
+            layers.push(Layers.createHexbinLayer(DataStore.getHexbin(), colorMode));
         } else {
             // Density mode: heatmap
             document.getElementById('stat-mode').textContent = 'Density';
-            layers.push(Layers.createHeatmapLayer(coords, senescence, mask, colorMode));
+            layers.push(Layers.createHeatmapLayer(coords, senescence, mask, colorMode, currentGeneExpr));
         }
 
         // Always show centroid labels
@@ -165,12 +172,6 @@
             alert(`Gene "${name}" not found.`);
         }
     }
-
-    // Downsample toggle
-    document.getElementById('downsample-toggle').addEventListener('change', (e) => {
-        // TODO: implement downsample mode switching
-        updateLayers();
-    });
 
     // Legend
     function updateLegend() {

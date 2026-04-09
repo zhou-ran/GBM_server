@@ -33,18 +33,18 @@ export function GeneAutocomplete({ value, onChange, onSelect }: GeneAutocomplete
   return (
     <div className="relative">
       <input
-        className="w-full rounded-xl border border-[var(--border)] bg-black/15 px-3 py-2 text-sm"
+        className="w-full rounded-xl border border-[var(--border)] bg-[var(--control-bg)] px-3 py-2 text-sm text-[var(--text)]"
         placeholder="Search gene"
         value={value}
         onChange={(event) => onChange(event.target.value)}
       />
       {results.length > 0 && (
-        <div className="absolute left-0 right-0 top-full z-10 mt-2 rounded-xl border border-[var(--border)] bg-[#101722] p-2 shadow-xl">
+        <div className="absolute left-0 right-0 top-full z-10 mt-2 rounded-xl border border-[var(--border)] bg-[var(--surface-overlay)] p-2 shadow-xl">
           {results.map((gene) => (
             <button
               key={gene}
               type="button"
-              className="block w-full rounded-lg px-2 py-1 text-left text-sm hover:bg-white/5"
+              className="block w-full rounded-lg px-2 py-1 text-left text-sm hover:bg-[var(--control-bg-hover)]"
               onClick={() => {
                 onChange(gene);
                 onSelect(gene);

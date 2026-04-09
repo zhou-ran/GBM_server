@@ -22,14 +22,14 @@ export function GeneSidebar() {
   }, [geneName, loadGene, selectedGene]);
 
   return (
-    <aside className="w-80 shrink-0 overflow-y-auto border-r border-[var(--border)] bg-[#0f1722] px-4 py-4">
-      <section className="rounded-2xl border border-[var(--border)] bg-white/3 p-4">
+    <aside className="w-80 shrink-0 overflow-y-auto border-r border-[var(--border)] bg-[var(--surface)] px-4 py-4">
+      <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4">
         <div className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">Level 3</div>
         <h2 className="mt-2 text-lg font-semibold">{selectedSubCluster ?? selectedCellType ?? 'Gene Explorer'}</h2>
         <p className="mt-1 text-sm text-[var(--text-muted)]">Load a gene or signature and inspect expression across the current drill-down context.</p>
       </section>
 
-      <section className="mt-4 rounded-2xl border border-[var(--border)] bg-white/3 p-4">
+      <section className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4">
         <h3 className="mb-3 text-sm font-semibold">Gene Search</h3>
         <GeneAutocomplete
           value={query}
@@ -46,12 +46,12 @@ export function GeneSidebar() {
         </button>
       </section>
 
-      <section className="mt-4 rounded-2xl border border-[var(--border)] bg-white/3 p-4">
+      <section className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4">
         <h3 className="mb-3 text-sm font-semibold">Signature Presets</h3>
         <SignaturePresets />
       </section>
 
-      <section className="mt-4 rounded-2xl border border-[var(--border)] bg-white/3 p-4 text-sm">
+      <section className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4 text-sm">
         <div className="text-[var(--text-muted)]">Selected feature</div>
         <div className="mt-2 font-medium">{signatureName ?? geneName ?? 'None loaded'}</div>
       </section>

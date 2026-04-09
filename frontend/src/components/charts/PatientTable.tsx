@@ -45,7 +45,7 @@ export function PatientTable({ rows, onSelect }: PatientTableProps) {
   return (
     <div className="h-full overflow-auto rounded-2xl border border-[var(--border)]">
       <table className="min-w-full text-left text-sm">
-        <thead className="sticky top-0 bg-[#111a26] text-[var(--text-muted)]">
+        <thead className="sticky top-0 bg-[var(--surface-raised)] text-[var(--text-muted)]">
           <tr>
             {columns.map((column) => (
               <th key={column.key} className="px-3 py-2 font-medium">
@@ -71,7 +71,7 @@ export function PatientTable({ rows, onSelect }: PatientTableProps) {
           {sortedRows.map((row) => (
             <tr
               key={row.donor_id}
-              className="border-t border-[var(--border)] hover:bg-white/4"
+              className="border-t border-[var(--border)] hover:bg-[var(--control-bg)]"
               onClick={() => onSelect(row.donorIndex)}
             >
               <td className="px-3 py-2">{row.donor_id}</td>

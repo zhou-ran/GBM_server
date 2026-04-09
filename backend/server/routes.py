@@ -2,7 +2,7 @@
 
 import numpy as np
 from fastapi import APIRouter, Body, Query
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, Response
 
 from .data_cache import get_cache
 from . import gene_service
@@ -20,6 +20,14 @@ ARROW_MEDIA = "application/vnd.apache.arrow.stream"
 async def get_cells():
     """All cell-level data as a single Arrow IPC stream (~48 MB)."""
     cache = get_cache()
+    cells_path = cache.data_file_path("cells.arrow")
+    if cells_path is not None:
+        return FileResponse(
+            cells_path,
+            media_type=ARROW_MEDIA,
+            filename="cells.arrow",
+            headers={"Cache-Control": "public, max-age=86400"},
+        )
     return Response(
         content=cache.cells_ipc,
         media_type=ARROW_MEDIA,
@@ -30,6 +38,15 @@ async def get_cells():
 @router.get("/gene/{gene_name}")
 async def get_gene(gene_name: str):
     """Gene expression as Arrow IPC stream."""
+    gene_path = gene_service.get_gene_arrow_path(gene_name)
+    if gene_path is not None:
+        return FileResponse(
+            gene_path,
+            media_type=ARROW_MEDIA,
+            filename=gene_path.name,
+            headers={"Cache-Control": "public, max-age=86400"},
+        )
+
     ipc_bytes = await gene_service.get_gene_arrow(gene_name)
     if ipc_bytes is None:
         return JSONResponse(

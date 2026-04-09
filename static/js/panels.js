@@ -9,6 +9,11 @@ const Panels = (() => {
         onDonorSelect = onSelect;
         const tbody = document.getElementById('patient-tbody');
         const countEl = document.getElementById('patient-count');
+        if (!Array.isArray(patients) || patients.length === 0) {
+            countEl.textContent = '(0)';
+            tbody.innerHTML = '<tr><td colspan="5">No patient summary data</td></tr>';
+            return;
+        }
         countEl.textContent = `(${patients.length})`;
 
         // Sort by cell count descending
@@ -72,6 +77,7 @@ const Panels = (() => {
     function initSplitView() {
         const btn = document.getElementById('split-toggle');
         const controls = document.getElementById('split-controls');
+        if (!btn || !controls || controls.hidden) return;
         controls.style.display = 'block';
 
         btn.addEventListener('click', () => {

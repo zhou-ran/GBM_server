@@ -6,7 +6,7 @@ export function Breadcrumb() {
   const navigateBack = useNavigationStore((s) => s.navigateBack);
 
   return (
-    <nav className="flex items-center gap-2 border-b border-[var(--border)] bg-[#111926] px-4 py-2 text-sm">
+    <nav className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-raised)] px-4 py-2 text-sm">
       {history.map((entry, index) => {
         const active = entry.level === currentLevel;
         return (

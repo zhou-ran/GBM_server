@@ -4,13 +4,16 @@ import { useCallback } from 'react';
 import DeckGL from '@deck.gl/react';
 import { OrthographicView } from '@deck.gl/core';
 import { useViewStore } from '../../stores/viewStore';
+import { useThemeStore } from '../../stores/themeStore';
 import { useDeckLayers } from '../../hooks/useDeckLayers';
+import { mapBackground } from '../../lib/colors';
 
 const VIEWS = new OrthographicView({ id: 'ortho', flipY: false });
 
 export function UmapView() {
   const viewState = useViewStore((s) => s.viewState);
   const setViewState = useViewStore((s) => s.setViewState);
+  const theme = useThemeStore((s) => s.theme);
   const layers = useDeckLayers();
 
   const onViewStateChange = useCallback(
@@ -28,6 +31,7 @@ export function UmapView() {
         onViewStateChange={onViewStateChange}
         layers={layers}
         controller={true}
+        style={{ background: mapBackground(theme) }}
       />
     </div>
   );

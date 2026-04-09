@@ -6,8 +6,9 @@ import { HeatmapLayer } from '@deck.gl/aggregation-layers';
 import { useDataStore } from '../stores/dataStore';
 import { useFilterStore } from '../stores/filterStore';
 import { useColorStore } from '../stores/colorStore';
+import { useThemeStore } from '../stores/themeStore';
 import { useViewStore } from '../stores/viewStore';
-import { CELLTYPE_COLORS, senescenceColor } from '../lib/colors';
+import { CELLTYPE_COLORS, senescenceColor, textLabelTheme } from '../lib/colors';
 import { DETAIL_THRESHOLD } from '../lib/constants';
 import type { Layer } from '@deck.gl/core';
 
@@ -20,9 +21,11 @@ export function useDeckLayers(): Layer[] {
   const colorMode = useColorStore((s) => s.colorMode);
   const geneExpr = useColorStore((s) => s.geneExpr);
   const renderMode = useViewStore((s) => s.renderMode);
+  const theme = useThemeStore((s) => s.theme);
 
   return useMemo(() => {
     if (!coords || !filterMask || !senescence || !cellTypeCodes) return [];
+    const labelTheme = textLabelTheme(theme);
 
     const layers: Layer[] = [];
     const n = coords.length / 2;
@@ -103,9 +106,9 @@ export function useDeckLayers(): Layer[] {
           getPosition: (d) => [d.x, d.y],
           getText: (d) => d.name,
           getSize: 12,
-          getColor: [255, 255, 255, 200],
+          getColor: labelTheme.text,
           outlineWidth: 2,
-          outlineColor: [0, 0, 0, 200],
+          outlineColor: labelTheme.outline,
           fontFamily: 'sans-serif',
           billboard: false,
         }),
@@ -113,5 +116,5 @@ export function useDeckLayers(): Layer[] {
     }
 
     return layers;
-  }, [coords, filterMask, senescence, cellTypeCodes, centroids, colorMode, geneExpr, renderMode]);
+  }, [coords, filterMask, senescence, cellTypeCodes, centroids, colorMode, geneExpr, renderMode, theme]);
 }

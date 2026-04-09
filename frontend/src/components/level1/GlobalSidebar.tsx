@@ -42,8 +42,8 @@ export function GlobalSidebar() {
   }, [centroids]);
 
   return (
-    <aside className="w-80 shrink-0 overflow-y-auto border-r border-[var(--border)] bg-[#0f1722] px-4 py-4">
-      <section className="rounded-2xl border border-[var(--border)] bg-white/3 p-4">
+    <aside className="w-80 shrink-0 overflow-y-auto border-r border-[var(--border)] bg-[var(--surface)] px-4 py-4">
+      <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4">
         <h3 className="mb-3 text-sm font-semibold">Color By</h3>
         <div className="space-y-2">
           {LEVEL1_OPTIONS.map((option) => (
@@ -72,11 +72,11 @@ export function GlobalSidebar() {
         <CompositionChart counts={composition} />
       </div>
 
-      <section className="mt-4 rounded-2xl border border-[var(--border)] bg-white/3 p-4">
+      <section className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4">
         <h3 className="mb-3 text-sm font-semibold">Patient Overview</h3>
         <div className="grid grid-cols-2 gap-2 text-sm">
           {patientStats.map((item) => (
-            <div key={item.label} className="rounded-xl bg-black/15 px-3 py-2">
+            <div key={item.label} className="rounded-xl bg-[var(--control-bg)] px-3 py-2">
               <div className="text-[var(--text-muted)]">{item.label}</div>
               <div className="mt-1 font-medium">{item.value.toLocaleString()}</div>
             </div>
@@ -84,7 +84,7 @@ export function GlobalSidebar() {
         </div>
       </section>
 
-      <section className="mt-4 rounded-2xl border border-[var(--border)] bg-white/3 p-4">
+      <section className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold">Senescence Distribution</h3>
           <span className="text-xs text-[var(--text-muted)]">cluster means</span>

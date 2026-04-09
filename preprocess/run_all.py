@@ -10,6 +10,8 @@ from step2_senescence import run as step2
 from step3_hexbin import run as step3
 from step4_stats import run as step4
 from step5_downsample import run as step5
+from step6_arrow import run as step6
+from validate_outputs import run as validate_outputs
 
 
 def main():
@@ -27,6 +29,10 @@ def main():
     step4()
     print()
     step5()
+    print()
+    step6()
+    print()
+    validate_outputs()
 
     elapsed = time.time() - t0
     print()

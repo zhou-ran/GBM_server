@@ -25,8 +25,8 @@ export function ClusterSidebar() {
   }, [filteredPatients, query]);
 
   return (
-    <aside className="w-80 shrink-0 overflow-y-auto border-r border-[var(--border)] bg-[#0f1722] px-4 py-4">
-      <section className="rounded-2xl border border-[var(--border)] bg-white/3 p-4">
+    <aside className="w-80 shrink-0 overflow-y-auto border-r border-[var(--border)] bg-[var(--surface)] px-4 py-4">
+      <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4">
         <div className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">Level 2</div>
         <h2 className="mt-2 text-lg font-semibold">{selectedCellType ?? 'Cell Type'}</h2>
         <p className="mt-1 text-sm text-[var(--text-muted)]">
@@ -34,11 +34,11 @@ export function ClusterSidebar() {
         </p>
       </section>
 
-      <div className="mt-4 rounded-2xl border border-[var(--border)] bg-white/3 p-4">
+      <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4">
         <FilterPanel omitColumns={['CellType']} />
       </div>
 
-      <div className="mt-4 rounded-2xl border border-[var(--border)] bg-white/3 p-4">
+      <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold">Sub-types</h3>
           <span className="text-xs text-[var(--text-muted)]">{Object.keys(subtypeCounts).length} groups</span>
@@ -46,10 +46,10 @@ export function ClusterSidebar() {
         <SubtypeBreakdown counts={subtypeCounts} />
       </div>
 
-      <div className="mt-4 rounded-2xl border border-[var(--border)] bg-white/3 p-4">
+      <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4">
         <h3 className="text-sm font-semibold">Donor Highlight</h3>
         <input
-          className="mt-3 w-full rounded-xl border border-[var(--border)] bg-black/15 px-3 py-2 text-sm"
+          className="mt-3 w-full rounded-xl border border-[var(--border)] bg-[var(--control-bg)] px-3 py-2 text-sm text-[var(--text)]"
           placeholder="Search donor"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
@@ -59,7 +59,7 @@ export function ClusterSidebar() {
             <button
               key={patient.donor_id}
               type="button"
-              className="flex w-full items-center justify-between rounded-xl bg-black/10 px-3 py-2 text-left text-sm"
+              className="flex w-full items-center justify-between rounded-xl bg-[var(--control-bg)] px-3 py-2 text-left text-sm hover:bg-[var(--control-bg-hover)]"
               onClick={() => highlightDonor(patient.donorIndex)}
             >
               <span>{patient.donor_id}</span>

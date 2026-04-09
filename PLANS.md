@@ -8,6 +8,87 @@ Each level narrows the data scope, increases analytical granularity, and unlocks
 
 ---
 
+## Phase 0: Critical Fixes (HIGHEST PRIORITY)
+
+### Fix 0A: Light Theme Default + Dark Mode Toggle
+
+**Problem**: 当前 UI 硬编码为暗色主题 (`--bg: #0d1117`, `--surface: #161b22`)，所有组件中也散布着暗色 class（如 `bg-[#0e1621]`、`text-white`）。需要改为默认白色主题，支持手动切换夜间模式。
+
+**Design**: 使用 Tailwind `dark:` variant + CSS 变量双主题系统。`<html>` 标签上通过 `class="dark"` 切换。用户偏好存入 `localStorage`。
+
+**Light theme (default)**:
+```
+--bg: #ffffff
+--surface: #f6f8fa
+--border: #d1d9e0
+--text: #1f2328
+--text-muted: #656d76
+--accent: #0969da
+```
+
+**Dark theme (opt-in)**:
+```
+--bg: #0d1117
+--surface: #161b22
+--border: #30363d
+--text: #e6edf3
+--text-muted: #8b949e
+--accent: #58a6ff
+```
+
+**deck.gl 背景**: Light 模式下 deck.gl canvas 背景设为 `#f6f8fa`，dark 模式下 `#0d1117`。centroid label 颜色也需跟随主题反转。
+
+#### TODO
+
+- [x] **P0-01** Modify `frontend/src/index.css` — 将 `:root` 变量改为 light theme 值，新增 `.dark` 选择器下的 dark theme 值。移除所有硬编码暗色。
+- [x] **P0-02** Create `frontend/src/stores/themeStore.ts` — Zustand store: `theme: 'light' | 'dark'`, `toggleTheme()`, 初始化时读取 `localStorage.getItem('theme')`，默认 `'light'`。`toggleTheme` 同时更新 `document.documentElement.classList` 和 `localStorage`。
+- [x] **P0-03** Create `frontend/src/components/common/ThemeToggle.tsx` — 太阳/月亮图标按钮，调用 `themeStore.toggleTheme()`。放在 Header 右侧。
+- [x] **P0-04** Modify `frontend/src/components/layout/Header.tsx` — 添加 `<ThemeToggle />` 到 header 右侧。
+- [x] **P0-05** Audit and fix all components — 将所有硬编码暗色 class 替换为 CSS 变量引用或 Tailwind `dark:` variant。需要修改的文件（至少）：
+  - `components/navigation/LevelRouter.tsx` — `bg-[#0e1621]` → `bg-[var(--surface)]`
+  - `components/level2/ClusterView.tsx` — `bg-[#0e1621]/90` → `bg-[var(--surface)]/90`，`text-white` → `text-[var(--text)]`
+  - `components/navigation/Breadcrumb.tsx` — 检查暗色引用
+  - `components/layout/Header.tsx` — `bg-[var(--surface)]` 已用变量，确认 OK
+  - `components/level1/GlobalSidebar.tsx` — 检查暗色引用
+  - `components/level1/HexbinMap.tsx` — deck.gl 背景色需跟随主题
+  - `components/level2/ClusterSidebar.tsx` — 检查暗色引用
+  - `components/level3/GeneSidebar.tsx` — 检查暗色引用
+  - `components/level3/GeneExplorer.tsx` — 检查暗色引用
+  - `components/common/LoadingOverlay.tsx` — `bg-black/70` 在 light 模式下需调整
+  - `components/charts/*.tsx` — Canvas 绘制颜色需读取 CSS 变量或接受 theme prop
+- [x] **P0-06** Modify `frontend/src/components/map/UmapView.tsx` 和 Level 1/2 的 deck.gl 组件 — 根据 `themeStore.theme` 设置 `DeckGL` 的 `style.background` 属性。Light: `#f6f8fa`, Dark: `#0d1117`。
+- [x] **P0-07** Modify `frontend/src/lib/colors.ts` 和 `lib/colorScales.ts` — centroid TextLayer 颜色需根据主题切换：light 模式下用深色文字 + 白色描边，dark 模式下用白色文字 + 黑色描边。
+
+---
+
+### Fix 0B: Static Data — 消除 Arrow IPC 运行时序列化，全部使用预生成静态文件
+
+**Problem**: 当前 Level 2 drill-down 时，前端请求 `GET /api/cells`，后端从 numpy 数组实时构建 Arrow RecordBatch 并序列化为 IPC 流（~48MB）。这导致：
+1. 首次请求慢（后端需要读取 binary 文件 + 构建 Arrow batch + 序列化）
+2. 如果后端未启动或响应慢，前端卡在 "Processing data..." 不动
+3. 基因表达也是运行时从 h5ad 读取 + Arrow 序列化
+
+**Solution**: 预处理阶段直接生成 Arrow IPC 文件，后端只做静态文件服务（`FileResponse`），前端直接 fetch 静态 `.arrow` 文件。零运行时计算。
+
+**预处理新增输出**:
+- `data/processed/cells.arrow` — 预生成的 Arrow IPC 文件（包含 x, y, senescence, 所有 meta 列）
+- `data/processed/gene_density/{GENE}.arrow` — 预生成的基因表达 Arrow IPC 文件（按需缓存后也是静态文件）
+
+**后端改动**: `/api/cells` 改为 `FileResponse('cells.arrow')`，不再运行时构建。`/api/gene/{name}` 先检查 `.arrow` 缓存文件，命中则直接 `FileResponse`；未命中时从 h5ad 读取后同时写入 `.arrow` 缓存。
+
+**前端改动**: 无需改动（仍然 `fetchArrowTable('/api/cells')`），但响应速度大幅提升。
+
+#### TODO
+
+- [x] **P0-08** Create `preprocess/step6_arrow.py` — 新预处理步骤：读取 coords.bin + meta.bin + senescence.bin + schema.json，构建 Arrow RecordBatch，写入 `data/processed/cells.arrow`。在 `run_all.py` 中添加此步骤。
+- [x] **P0-09** Modify `backend/server/data_cache.py` — `cells_ipc` 属性改为：先检查 `data/processed/cells.arrow` 文件是否存在，存在则直接 `open().read()` 返回字节；不存在时 fallback 到运行时构建（向后兼容）。
+- [x] **P0-10** Modify `backend/server/routes.py` — `/api/cells` 端点改为优先使用 `FileResponse('cells.arrow')` 直接返回静态文件，避免将整个文件读入 Python 内存。
+- [x] **P0-11** Modify `backend/server/gene_service.py` — `get_gene_arrow()` 改为：先检查 `gene_density/{GENE}.arrow` 文件，命中则 `FileResponse`；未命中时从 h5ad 读取后写入 `.arrow` 文件并返回。后续请求直接走静态文件。
+- [x] **P0-12** Modify `preprocess/run_all.py` — 在 step5 之后添加 step6_arrow 调用。
+- [x] **P0-13** Modify `preprocess/validate_outputs.py` — 添加 `cells.arrow` 到必需文件检查列表。
+
+---
+
 ## Level 1: Global Atlas (宏观全局图谱)
 
 ### What the user sees
@@ -330,6 +411,9 @@ Level 4 (on trajectory entry):
 
 ## Implementation Priority
 
+### Phase 0: Critical Fixes (DO FIRST)
+P0-01 through P0-13 (light theme + static data)
+
 ### Phase 1: Navigation Framework + Level 1 (foundation)
 PX-01, PX-02, PX-03, PX-04, PX-05, PX-06, PX-07,
 P1-01 through P1-09, PS-01 through PS-05
@@ -349,8 +433,8 @@ P4-01 through P4-09
 
 | Endpoint | Method | Response | Level | Status |
 |----------|--------|----------|-------|--------|
-| `GET /api/cells` | GET | Arrow IPC | L2 | Exists |
-| `GET /api/gene/{name}` | GET | Arrow IPC | L3 | Exists |
+| `GET /api/cells` | GET | Static Arrow IPC file (`cells.arrow`) | L2 | **Refactor** → FileResponse |
+| `GET /api/gene/{name}` | GET | Static Arrow IPC file (cached `.arrow`) | L3 | **Refactor** → FileResponse |
 | `GET /api/genes/search?q=` | GET | JSON | L3 | **New** |
 | `POST /api/signature` | POST | Arrow IPC | L3 | **New** |
 | `GET /api/trajectory/{celltype}` | GET | Arrow IPC | L4 | **New** (needs preprocessing) |
@@ -363,7 +447,8 @@ P4-01 through P4-09
 
 | Script | Output | Level | Priority |
 |--------|--------|-------|----------|
-| `step6_trajectory.py` | `trajectory_{type}.bin`, `trajectory_{type}_genes.json` | L4 | Phase 4 |
-| `step7_cellchat.py` | `cellchat.json` | L4 | Phase 4 |
+| `step6_arrow.py` | `cells.arrow` (pre-built Arrow IPC, ~48MB) | L2 | **Phase 0** |
+| `step7_trajectory.py` | `trajectory_{type}.bin`, `trajectory_{type}_genes.json` | L4 | Phase 4 |
+| `step8_cellchat.py` | `cellchat.json` | L4 | Phase 4 |
 
-Levels 1-3 require NO new preprocessing — all data already exists.
+Levels 1-3 require NO new preprocessing beyond `step6_arrow.py` — all other data already exists.

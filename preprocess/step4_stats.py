@@ -179,12 +179,38 @@ def compute_correlation():
     print(f"    {len(corr_cols)}x{len(corr_cols)} correlation matrix written")
 
 
+def compute_global_stats():
+    """Build global cell count statistics from schema + meta.bin."""
+    print("  Computing global stats...")
+    with open(os.path.join(OUT_DIR, 'schema.json')) as f:
+        schema = json.load(f)
+
+    meta = np.fromfile(os.path.join(OUT_DIR, 'meta.bin'), dtype=np.uint8)
+    stats = {'total': schema['n_cells'], 'by_column': {}}
+
+    for col in schema['columns']:
+        if col.get('dtype', 'uint8') != 'uint8':
+            continue
+        start = col['byte_offset']
+        end = start + col['byte_length']
+        codes = meta[start:end]
+        counts = {}
+        for i, cat in enumerate(col['categories']):
+            counts[cat] = int((codes == i).sum())
+        stats['by_column'][col['name']] = counts
+
+    with open(os.path.join(OUT_DIR, 'stats.json'), 'w') as f:
+        json.dump(stats, f)
+    print(f"    stats for {len(stats['by_column'])} columns written")
+
+
 def run():
     print("Step 4: Computing statistics...")
     compute_centroids()
     compute_patient_matrix()
     compute_de()
     compute_correlation()
+    compute_global_stats()
     print("Step 4 complete.")
 
 

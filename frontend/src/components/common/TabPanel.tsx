@@ -21,7 +21,7 @@ export function TabPanel<T extends string>({ activeTab, tabs, onTabChange }: Tab
             key={tab.id}
             type="button"
             className={`rounded-full px-3 py-1.5 text-sm transition ${
-              tab.id === activeTab ? 'bg-white/12 text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+              tab.id === activeTab ? 'bg-[var(--control-bg-hover)] text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
             }`}
             onClick={() => onTabChange(tab.id)}
           >

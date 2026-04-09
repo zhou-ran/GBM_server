@@ -5,8 +5,10 @@ import { HeatmapLayer } from '@deck.gl/aggregation-layers';
 import { ScatterplotLayer, TextLayer } from '@deck.gl/layers';
 import { useClusterStats } from '../../hooks/useClusterStats';
 import { useNavigationStore } from '../../stores/navigationStore';
+import { useThemeStore } from '../../stores/themeStore';
 import { useViewStore } from '../../stores/viewStore';
 import { categoricalColor } from '../../lib/colorScales';
+import { mapBackground, textLabelTheme } from '../../lib/colors';
 
 const VIEW = new OrthographicView({ id: 'level2-ortho', flipY: false });
 
@@ -16,6 +18,8 @@ export function ClusterView() {
   const drillDown = useNavigationStore((s) => s.drillDown);
   const viewState = useViewStore((s) => s.viewState);
   const setViewState = useViewStore((s) => s.setViewState);
+  const theme = useThemeStore((s) => s.theme);
+  const labelTheme = textLabelTheme(theme);
 
   const layers = useMemo(() => {
     const subtypeOrder = Array.from(new Set(points.map((point) => point.subtype)));
@@ -37,8 +41,8 @@ export function ClusterView() {
           getPosition: (d) => [d.x, d.y],
           getText: (d) => d.label,
           getSize: 14,
-          getColor: [255, 255, 255, 230],
-          outlineColor: [0, 0, 0, 220],
+          getColor: labelTheme.text,
+          outlineColor: labelTheme.outline,
           outlineWidth: 3,
           onClick: (info) => info.object && drillDown({ level: 3, subCluster: info.object.label, label: info.object.label }),
         }),
@@ -63,13 +67,13 @@ export function ClusterView() {
         getPosition: (d) => [d.x, d.y],
         getText: (d) => d.label,
         getSize: 14,
-        getColor: [255, 255, 255, 235],
-        outlineColor: [0, 0, 0, 220],
+        getColor: labelTheme.text,
+        outlineColor: labelTheme.outline,
         outlineWidth: 3,
         onClick: (info) => info.object && drillDown({ level: 3, subCluster: info.object.label, label: info.object.label }),
       }),
     ];
-  }, [centroids, drillDown, points]);
+  }, [centroids, drillDown, labelTheme.outline, labelTheme.text, points]);
 
   return (
     <div className="relative flex-1">
@@ -77,6 +81,7 @@ export function ClusterView() {
         views={VIEW}
         controller={true}
         viewState={viewState}
+        style={{ background: mapBackground(theme) }}
         layers={layers}
         onViewStateChange={({ viewState: next }) =>
           setViewState({
@@ -86,7 +91,7 @@ export function ClusterView() {
             zoom: typeof next.zoom === 'number' ? next.zoom : viewState.zoom,
           })}
       />
-      <div className="pointer-events-none absolute left-4 top-4 rounded-full border border-white/10 bg-[#0e1621]/90 px-3 py-1 text-xs text-[var(--text-muted)]">
+      <div className="pointer-events-none absolute left-4 top-4 rounded-full border border-[var(--border)] bg-[var(--surface-overlay)] px-3 py-1 text-xs text-[var(--text-muted)] shadow-sm">
         {selectedCellType ?? 'Cluster'} • {points.length.toLocaleString()} visible cells
       </div>
     </div>

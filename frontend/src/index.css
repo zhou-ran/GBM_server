@@ -1,12 +1,33 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: light;
+  --bg: #ffffff;
+  --surface: #f6f8fa;
+  --surface-raised: #ffffff;
+  --surface-overlay: rgb(255 255 255 / 0.94);
+  --control-bg: rgb(208 215 222 / 0.32);
+  --control-bg-hover: rgb(208 215 222 / 0.55);
+  --border: #d1d9e0;
+  --text: #1f2328;
+  --text-muted: #656d76;
+  --accent: #0969da;
+  --map-bg: #f6f8fa;
+}
+
+.dark {
+  color-scheme: dark;
   --bg: #0d1117;
   --surface: #161b22;
+  --surface-raised: #0f1722;
+  --surface-overlay: rgb(14 22 33 / 0.92);
+  --control-bg: rgb(255 255 255 / 0.05);
+  --control-bg-hover: rgb(255 255 255 / 0.1);
   --border: #30363d;
   --text: #e6edf3;
   --text-muted: #8b949e;
   --accent: #58a6ff;
+  --map-bg: #0d1117;
 }
 
 body {

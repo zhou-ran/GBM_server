@@ -69,7 +69,7 @@ export function CorrelationScatter({ points }: CorrelationScatterProps) {
   }, [sampled]);
 
   return (
-    <div className="h-full rounded-2xl border border-[var(--border)] bg-black/10 p-3">
+    <div className="h-full rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-3">
       <div className="mb-2 text-xs text-[var(--text-muted)]">Spearman r = {rho.toFixed(3)}</div>
       <canvas ref={canvasRef} className="h-[220px] w-full" />
     </div>

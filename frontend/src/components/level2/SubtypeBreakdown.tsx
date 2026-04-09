@@ -18,14 +18,14 @@ export function SubtypeBreakdown({ counts }: SubtypeBreakdownProps) {
           <button
             key={label}
             type="button"
-            className="w-full rounded-xl border border-[var(--border)] bg-black/10 px-3 py-2 text-left hover:border-white/20"
+            className="w-full rounded-xl border border-[var(--border)] bg-[var(--control-bg)] px-3 py-2 text-left hover:border-[var(--accent)]"
             onClick={() => drillDown({ level: 3, subCluster: label, label })}
           >
             <div className="flex items-center justify-between text-sm">
               <span>{label}</span>
               <span className="text-[var(--text-muted)]">{ratio.toFixed(1)}%</span>
             </div>
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/5">
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--control-bg)]">
               <div className="h-full rounded-full" style={{ width: `${ratio}%`, background: categoricalCss(index) }} />
             </div>
           </button>

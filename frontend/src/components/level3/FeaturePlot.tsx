@@ -4,8 +4,9 @@ import { OrthographicView } from '@deck.gl/core';
 import { ScatterplotLayer } from '@deck.gl/layers';
 import { useClusterStats } from '../../hooks/useClusterStats';
 import { useColorStore } from '../../stores/colorStore';
+import { useThemeStore } from '../../stores/themeStore';
 import { useViewStore } from '../../stores/viewStore';
-import { senescenceColor } from '../../lib/colors';
+import { mapBackground, senescenceColor } from '../../lib/colors';
 
 const VIEW = new OrthographicView({ id: 'feature-plot-ortho', flipY: false });
 
@@ -16,6 +17,7 @@ export function FeaturePlot() {
   const colorMode = useColorStore((s) => s.colorMode);
   const viewState = useViewStore((s) => s.viewState);
   const setViewState = useViewStore((s) => s.setViewState);
+  const theme = useThemeStore((s) => s.theme);
 
   const values = colorMode === 'signature' ? signatureScore : geneExpr;
 
@@ -35,12 +37,13 @@ export function FeaturePlot() {
   }, [points, values]);
 
   return (
-    <div className="relative h-full rounded-2xl border border-[var(--border)] bg-black/10">
+    <div className="relative h-full rounded-2xl border border-[var(--border)] bg-[var(--map-bg)]">
       <DeckGL
         views={VIEW}
         controller={true}
         viewState={viewState}
         layers={layers}
+        style={{ background: mapBackground(theme) }}
         onViewStateChange={({ viewState: next }) =>
           setViewState({
             target: Array.isArray(next.target) && next.target.length === 2

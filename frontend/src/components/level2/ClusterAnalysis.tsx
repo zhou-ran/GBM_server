@@ -29,15 +29,15 @@ export function ClusterAnalysis() {
   ];
 
   return (
-    <div className="grid h-80 shrink-0 grid-cols-3 gap-4 border-t border-[var(--border)] bg-[#0e1621] p-4">
-      <div className="rounded-2xl border border-[var(--border)] bg-white/3 p-4">
+    <div className="grid h-80 shrink-0 grid-cols-3 gap-4 border-t border-[var(--border)] bg-[var(--surface)] p-4">
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4">
         <TabPanel activeTab={activeTab} tabs={tabs} onTabChange={setActiveTab} />
       </div>
-      <div className="rounded-2xl border border-[var(--border)] bg-white/3 p-4">
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4">
         <div className="mb-3 text-sm font-semibold">Patient Breakdown</div>
         <PatientTable rows={filteredPatients} onSelect={highlightDonor} />
       </div>
-      <div className="rounded-2xl border border-[var(--border)] bg-white/3 p-4">
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4">
         <div className="mb-3 text-sm font-semibold">DE Waterfall</div>
         <WaterfallChart
           genes={deGenes}

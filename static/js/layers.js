@@ -70,14 +70,17 @@ const Layers = (() => {
     }
 
     // Create HeatmapLayer for density view (default, >50K visible)
-    function createHeatmapLayer(coords, senescence, filterMask, colorMode) {
+    function createHeatmapLayer(coords, senescence, filterMask, colorMode, geneExpr) {
         const n = coords.length / 2;
         const data = [];
         for (let i = 0; i < n; i++) {
             if (filterMask && !filterMask[i]) continue;
+            let weight = 1;
+            if (colorMode === 'senescence') weight = senescence[i];
+            if (colorMode === 'gene' && geneExpr) weight = geneExpr[i];
             data.push({
                 position: [coords[i * 2], coords[i * 2 + 1]],
-                weight: colorMode === 'senescence' ? senescence[i] : 1,
+                weight,
             });
         }
 
@@ -89,7 +92,7 @@ const Layers = (() => {
             radiusPixels: 15,
             intensity: 1.5,
             threshold: 0.05,
-            colorRange: colorMode === 'senescence'
+            colorRange: (colorMode === 'senescence' || colorMode === 'gene')
                 ? [[30, 60, 180], [80, 180, 200], [255, 240, 50], [255, 100, 30], [200, 0, 0]]
                 : [[10, 20, 40], [30, 80, 160], [80, 180, 220], [200, 240, 100], [255, 200, 50]],
             aggregation: 'SUM',
@@ -97,9 +100,10 @@ const Layers = (() => {
     }
 
     // Create ScatterplotLayer for detail view (<5K visible)
-    function createScatterLayer(coords, meta, senescence, schema, filterMask, colorMode, geneExpr) {
+    function createScatterLayer(
+        coords, cellTypeCodes, cellType2Codes, senescence, filterMask, colorMode, geneExpr
+    ) {
         const n = coords.length / 2;
-        const nCells = schema.n_cells;
         const data = [];
         for (let i = 0; i < n; i++) {
             if (filterMask && !filterMask[i]) continue;
@@ -120,10 +124,10 @@ const Layers = (() => {
                 } else if (colorMode === 'gene' && geneExpr) {
                     return senescenceColor(geneExpr[i]);
                 } else if (colorMode === 'celltype2') {
-                    const code = meta[nCells + i]; // CellType_Level2 offset
+                    const code = cellType2Codes ? cellType2Codes[i] : -1;
                     return [...(CELLTYPE2_COLORS[code] || [128, 128, 128]), 200];
                 } else {
-                    const code = meta[i]; // CellType offset
+                    const code = cellTypeCodes ? cellTypeCodes[i] : -1;
                     return [...(CELLTYPE_COLORS[code] || [128, 128, 128]), 200];
                 }
             },
