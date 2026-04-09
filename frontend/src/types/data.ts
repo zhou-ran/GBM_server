@@ -58,3 +58,43 @@ export interface GlobalStats {
 export type ColorMode = 'celltype' | 'celltype2' | 'senescence' | 'gene' | 'signature' | 'age' | 'idh';
 
 export type RenderMode = 'overview' | 'density' | 'detail';
+
+export interface TrajectoryGeneTrend {
+  gene: string;
+  mean_expression: (number | null)[];
+}
+
+export interface TrajectoryGenes {
+  celltype?: string;
+  n_cells?: number;
+  n_cells_used?: number;
+  bins: number[];
+  genes: TrajectoryGeneTrend[];
+}
+
+export interface CellChatNode {
+  id: string;
+  label: string;
+}
+
+export interface CellChatEdge {
+  source: string;
+  target: string;
+  ligand: string;
+  receptor: string;
+  pair: string;
+  pathway: string;
+  score: number;
+}
+
+export interface CellChatPair {
+  pair: string;
+  pathway: string;
+  scores: Array<{ source: string; target: string; score: number }>;
+}
+
+export interface CellChatData {
+  nodes: CellChatNode[];
+  edges: CellChatEdge[];
+  pairs: CellChatPair[];
+}

@@ -4,6 +4,7 @@ import numpy as np
 from fastapi import APIRouter, Body, Query
 from fastapi.responses import FileResponse, JSONResponse, Response
 
+from .arrow_io import build_float_batch, serialize_ipc
 from .data_cache import get_cache
 from . import gene_service
 from . import signature_service
@@ -64,6 +65,34 @@ async def get_signature(payload: dict = Body(...)):
     if ipc_bytes is None:
         return JSONResponse(content={"error": "No valid genes supplied"}, status_code=400)
     return Response(content=ipc_bytes, media_type=ARROW_MEDIA)
+
+
+@router.get("/trajectory/{celltype}")
+async def get_trajectory(celltype: str):
+    """Pseudotime vector for one major cell type as Arrow IPC."""
+    safe_name = celltype.replace("/", "_").replace(" ", "_")
+    path = get_cache().data_file_path(f"trajectory_{safe_name}.bin")
+    if path is None:
+        return JSONResponse(
+            content={"error": f"Trajectory for {celltype} not found. Run preprocess/step7_trajectory.py."},
+            status_code=404,
+        )
+    pseudotime = np.fromfile(path, dtype=np.float32)
+    return Response(
+        content=serialize_ipc(build_float_batch(pseudotime, "pseudotime")),
+        media_type=ARROW_MEDIA,
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
+
+
+@router.get("/trajectory/{celltype}/genes")
+async def get_trajectory_genes(celltype: str):
+    """Top gene trends along pseudotime."""
+    safe_name = celltype.replace("/", "_").replace(" ", "_")
+    data = get_cache().load_json(f"trajectory_{safe_name}_genes.json")
+    if data is None:
+        return JSONResponse(content={"celltype": celltype, "genes": []}, status_code=404)
+    return JSONResponse(content=data)
 
 
 # --- JSON endpoints (unchanged from original) ---------------------------
@@ -134,6 +163,17 @@ async def get_stats():
             counts[cat] = int((codes == i).sum())
         stats["by_column"][col_def["name"]] = counts
     return JSONResponse(content=stats)
+
+
+@router.get("/cellchat")
+async def get_cellchat():
+    data = get_cache().load_json("cellchat.json")
+    if data is None:
+        return JSONResponse(
+            content={"nodes": [], "edges": [], "pairs": []},
+            status_code=404,
+        )
+    return JSONResponse(content=data)
 
 
 @router.get("/genes/search")

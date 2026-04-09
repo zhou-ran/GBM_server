@@ -12,4 +12,7 @@ export const ENDPOINTS = {
   geneSearch: (query: string) => `/api/genes/search?q=${encodeURIComponent(query)}`,
   signature: '/api/signature',
   gene: (name: string) => `/api/gene/${encodeURIComponent(name)}`,
+  trajectory: (cellType: string) => `/api/trajectory/${encodeURIComponent(cellType)}`,
+  trajectoryGenes: (cellType: string) => `/api/trajectory/${encodeURIComponent(cellType)}/genes`,
+  cellchat: '/api/cellchat',
 } as const;

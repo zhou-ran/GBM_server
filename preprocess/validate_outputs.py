@@ -25,6 +25,7 @@ OPTIONAL_FILES = [
     'stats.json',
     'downsample.bin',
     'downsample_idx.bin',
+    'cellchat.json',
 ]
 
 

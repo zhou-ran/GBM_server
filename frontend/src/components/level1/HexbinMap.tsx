@@ -33,8 +33,11 @@ export function HexbinMap() {
   const [hovered, setHovered] = useState<{ x: number; y: number; bin: HexbinBin } | null>(null);
   const labelTheme = textLabelTheme(theme);
 
-  const bins = hexbin?.bins ?? [];
-  const cellTypeNames = hexbin?.celltype_names ?? schema?.columns.find((column) => column.name === 'CellType')?.categories ?? [];
+  const bins = useMemo(() => hexbin?.bins ?? [], [hexbin]);
+  const cellTypeNames = useMemo(
+    () => hexbin?.celltype_names ?? schema?.columns.find((column) => column.name === 'CellType')?.categories ?? [],
+    [hexbin, schema],
+  );
 
   const layers = useMemo(() => {
     const polygonData = bins.map((bin) => ({

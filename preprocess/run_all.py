@@ -11,6 +11,8 @@ from step3_hexbin import run as step3
 from step4_stats import run as step4
 from step5_downsample import run as step5
 from step6_arrow import run as step6
+from step7_trajectory import run as step7
+from step8_cellchat import run as step8
 from validate_outputs import run as validate_outputs
 
 
@@ -31,6 +33,10 @@ def main():
     step5()
     print()
     step6()
+    print()
+    step7()
+    print()
+    step8()
     print()
     validate_outputs()
 

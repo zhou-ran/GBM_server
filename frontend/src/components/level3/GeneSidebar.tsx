@@ -8,6 +8,7 @@ export function GeneSidebar() {
   const selectedGene = useNavigationStore((s) => s.selectedGene);
   const selectedCellType = useNavigationStore((s) => s.selectedCellType);
   const selectedSubCluster = useNavigationStore((s) => s.selectedSubCluster);
+  const drillDown = useNavigationStore((s) => s.drillDown);
   const loadGene = useColorStore((s) => s.loadGene);
   const geneName = useColorStore((s) => s.geneName);
   const signatureName = useColorStore((s) => s.signatureName);
@@ -17,7 +18,6 @@ export function GeneSidebar() {
   useEffect(() => {
     if (selectedGene && selectedGene !== geneName) {
       void loadGene(selectedGene);
-      setQuery(selectedGene);
     }
   }, [geneName, loadGene, selectedGene]);
 
@@ -55,6 +55,14 @@ export function GeneSidebar() {
         <div className="text-[var(--text-muted)]">Selected feature</div>
         <div className="mt-2 font-medium">{signatureName ?? geneName ?? 'None loaded'}</div>
       </section>
+
+      <button
+        type="button"
+        className="mt-4 w-full rounded-xl border border-[var(--border)] bg-[var(--control-bg)] px-3 py-2 text-sm font-medium hover:bg-[var(--control-bg-hover)]"
+        onClick={() => drillDown({ level: 4, label: 'Trajectory' })}
+      >
+        Open Trajectory & CellChat
+      </button>
     </aside>
   );
 }

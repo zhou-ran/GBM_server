@@ -13,10 +13,7 @@ export function GeneAutocomplete({ value, onChange, onSelect }: GeneAutocomplete
 
   useEffect(() => {
     const query = value.trim();
-    if (query.length < 2) {
-      setResults([]);
-      return;
-    }
+    if (query.length < 2) return;
 
     const timer = window.setTimeout(async () => {
       try {
@@ -38,7 +35,7 @@ export function GeneAutocomplete({ value, onChange, onSelect }: GeneAutocomplete
         value={value}
         onChange={(event) => onChange(event.target.value)}
       />
-      {results.length > 0 && (
+      {value.trim().length >= 2 && results.length > 0 && (
         <div className="absolute left-0 right-0 top-full z-10 mt-2 rounded-xl border border-[var(--border)] bg-[var(--surface-overlay)] p-2 shadow-xl">
           {results.map((gene) => (
             <button

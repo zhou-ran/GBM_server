@@ -39,6 +39,14 @@ def build_gene_batch(expression: np.ndarray) -> pa.RecordBatch:
     )
 
 
+def build_float_batch(values: np.ndarray, name: str) -> pa.RecordBatch:
+    """Build a single-column float32 Arrow RecordBatch."""
+    return pa.RecordBatch.from_arrays(
+        [pa.array(values.astype(np.float32, copy=False))],
+        names=[name],
+    )
+
+
 def serialize_ipc(batch: pa.RecordBatch) -> bytes:
     """Serialize a RecordBatch to Arrow IPC stream format."""
     sink = pa.BufferOutputStream()

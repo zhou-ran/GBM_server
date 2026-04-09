@@ -333,15 +333,15 @@ This level requires new preprocessing that does not currently exist:
 
 ### TODO
 
-- [ ] **P4-01** Create `preprocess/step6_trajectory.py` — compute pseudotime using `scanpy.tl.dpt` (diffusion pseudotime) per major cell type. Output: `trajectory_{celltype}.bin` (float32 pseudotime per cell) + `trajectory_{celltype}_genes.json` (top varying genes along trajectory).
-- [ ] **P4-02** Create `preprocess/step7_cellchat.py` — compute cell-cell communication using `liana` (Python CellChat alternative). Output: `cellchat.json` with ligand-receptor pairs, source/target cell types, interaction scores.
-- [ ] **P4-03** Add backend endpoints: `GET /api/trajectory/{celltype}` → Arrow IPC (pseudotime values), `GET /api/trajectory/{celltype}/genes` → JSON (gene trends), `GET /api/cellchat` → JSON (interaction network)
-- [ ] **P4-04** Create `components/level4/TrajectoryView.tsx` — main Level 4 layout: 2×2 grid with pseudotime UMAP, gene trends, CellChat network, L-R heatmap
-- [ ] **P4-05** Create `components/level4/PseudotimeMap.tsx` — deck.gl ScatterplotLayer colored by pseudotime (purple→yellow). Optional arrow overlay for trajectory direction.
-- [ ] **P4-06** Create `components/charts/GeneTrendPlot.tsx` — line chart: X = pseudotime bins, Y = mean expression. Multiple gene lines with legend. Canvas 2D or lightweight SVG.
-- [ ] **P4-07** Create `components/level4/CellChatNetwork.tsx` — force-directed graph (d3-force or deck.gl ArcLayer). Nodes = cell types, edges = interaction strength. Filterable by pathway.
-- [ ] **P4-08** Create `components/charts/LRHeatmap.tsx` — ligand-receptor pair heatmap. Rows = L-R pairs, columns = cell type pairs. Color = interaction score.
-- [ ] **P4-09** Create `components/level4/TrajectorySidebar.tsx` — left panel: mode toggle (pseudotime/cellchat), trajectory root cell selector, CellChat pathway filter
+- [x] **P4-01** Create `preprocess/step7_trajectory.py` — compute pseudotime using `scanpy.tl.dpt` (diffusion pseudotime) per major cell type. Output: `trajectory_{celltype}.bin` (float32 pseudotime per cell) + `trajectory_{celltype}_genes.json` (top varying genes along trajectory).
+- [x] **P4-02** Create `preprocess/step8_cellchat.py` — compute cell-cell communication summary. Output: `cellchat.json` with ligand-receptor pairs, source/target cell types, interaction scores.
+- [x] **P4-03** Add backend endpoints: `GET /api/trajectory/{celltype}` → Arrow IPC (pseudotime values), `GET /api/trajectory/{celltype}/genes` → JSON (gene trends), `GET /api/cellchat` → JSON (interaction network)
+- [x] **P4-04** Create `components/level4/TrajectoryView.tsx` — main Level 4 layout: 2×2 grid with pseudotime UMAP, gene trends, CellChat network, L-R heatmap
+- [x] **P4-05** Create `components/level4/PseudotimeMap.tsx` — deck.gl ScatterplotLayer colored by pseudotime (purple→yellow). Optional arrow overlay for trajectory direction.
+- [x] **P4-06** Create `components/charts/GeneTrendPlot.tsx` — line chart: X = pseudotime bins, Y = mean expression. Multiple gene lines with legend. Canvas 2D or lightweight SVG.
+- [x] **P4-07** Create `components/level4/CellChatNetwork.tsx` — force-directed graph (d3-force or deck.gl ArcLayer). Nodes = cell types, edges = interaction strength. Filterable by pathway.
+- [x] **P4-08** Create `components/charts/LRHeatmap.tsx` — ligand-receptor pair heatmap. Rows = L-R pairs, columns = cell type pairs. Color = interaction score.
+- [x] **P4-09** Create `components/level4/TrajectorySidebar.tsx` — left panel: mode toggle (pseudotime/cellchat), trajectory root cell selector, CellChat pathway filter
 
 ---
 
