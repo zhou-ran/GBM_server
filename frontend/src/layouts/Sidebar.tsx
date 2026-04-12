@@ -4,6 +4,7 @@ const NAV_ITEMS = [
   { to: '/', label: 'Home' },
   { to: '/explorer', label: 'Explorer' },
   { to: '/about', label: 'About' },
+  { to: '/help', label: 'Help' },
 ];
 
 export function Sidebar() {

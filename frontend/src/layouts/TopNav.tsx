@@ -21,6 +21,9 @@ export function TopNav() {
   if (pathname.startsWith('/about')) {
     crumbs.push({ label: 'About', to: '/about' });
   }
+  if (pathname.startsWith('/help')) {
+    crumbs.push({ label: 'Help', to: '/help' });
+  }
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--surface-overlay)] px-4 backdrop-blur">

@@ -7,6 +7,7 @@ import { MainLayout } from './layouts/MainLayout';
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const ExplorerPage = lazy(() => import('./pages/ExplorerPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
+const HelpPage = lazy(() => import('./pages/HelpPage'));
 
 function App() {
   useAppPreload();
@@ -21,6 +22,7 @@ function App() {
               <Route path="cell/:cellId" element={null} />
             </Route>
             <Route path="about" element={<AboutPage />} />
+            <Route path="help" element={<HelpPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

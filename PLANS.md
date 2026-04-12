@@ -1800,3 +1800,197 @@ const mockCellDetailsByIndex = {
 - `frontend/src/hooks/useDeckLayers.ts`
 - `frontend/src/stores/*`
 - `frontend/package.json`
+
+---
+
+# 数据预加载优化方案
+
+> 创建日期：2026-04-12
+> 问题：用户打开网页时看到 "Loading integrated atlas" loading 状态
+
+## 问题诊断
+
+用户打开网页时看到 "Loading integrated atlas" 是因为：
+
+1. **后端预热不足**：`app.py` lifespan 只预热 `schema`，cells.arrow (49MB) 在首次请求时才加载
+2. **前端请求滞后**：`uiStore` 初始 `isLoading=true`，页面组件挂载后才发起请求
+3. **无预请求机制**：App 初始化时不预请求，等到 DashboardPage/ExplorerPage 挂载
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 🔴 问题根因分析                                                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  1. 后端预热不足                                                              │
+│     • app.py lifespan 只预热 schema (轻量)                                   │
+│     • cells.arrow (49MB) 在首次请求时才加载                                   │
+│                                                                             │
+│  2. 前端请求时机滞后                                                          │
+│     • uiStore 初始 isLoading=true                                            │
+│     • 页面组件挂载后才发起请求                                                 │
+│     • 没有 App 级预请求机制                                                   │
+│                                                                             │
+│  3. 数据传输时间                                                              │
+│     • cells.arrow ~49MB，传输需要时间                                         │
+│     • 用户打开页面必定看到 loading                                             │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 解决方案
+
+### Phase 1: 后端预热优化 [核心]
+
+**目标**：后端启动时预热所有数据，首次请求立即返回
+
+**修改文件**：`backend/server/app.py`
+
+**改动**：
+```python
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    from .data_cache import get_cache
+    cache = get_cache()
+
+    # 预热 schema (已有)
+    _ = cache.schema
+
+    # 新增：预热 cells_ipc (49MB)
+    _ = cache.cells_ipc
+
+    # 新增：预热 JSON 文件
+    for json_file in ["hexbin.json", "centroids.json", "stats.json", "patients.json"]:
+        cache.load_json(json_file)
+
+    print("Backend data cache warmed up")
+    yield
+```
+
+**影响分析**：
+- 启动时间增加 ~2-5 秒（加载 49MB 到内存）
+- 首次请求响应时间从 ~3s 降到 ~50ms
+- 内存占用增加 ~50MB（可接受）
+
+---
+
+### Phase 2: 前端预请求机制 [推荐]
+
+**目标**：App 初始化时就预请求核心数据，页面挂载时数据已就绪
+
+**修改文件**：
+- `frontend/src/App.tsx`
+- 新增 `frontend/src/hooks/useAppPreload.ts`
+
+**改动**：
+
+新增 `useAppPreload.ts`：
+```ts
+import { useEffect } from 'react';
+import { useDataStore } from '../stores/dataStore';
+
+export function useAppPreload() {
+  const loadLevel1 = useDataStore((s) => s.loadLevel1);
+  const isLevel1Loaded = useDataStore((s) => s.isLevel1Loaded);
+
+  useEffect(() => {
+    // App 初始化时立即开始预请求，不等页面组件挂载
+    if (!isLevel1Loaded) {
+      loadLevel1().catch(console.error);
+    }
+  }, []); // 空依赖，只在 App 初始化时执行一次
+}
+```
+
+修改 `App.tsx`：
+```tsx
+function App() {
+  // 新增：App 级预请求
+  useAppPreload();
+
+  return (
+    // ...existing JSX
+  );
+}
+```
+
+---
+
+### Phase 3: Loading 状态优化 [必须配合 Phase 1]
+
+**目标**：不一开始就显示 loading，只在真正等待时显示
+
+**修改文件**：`frontend/src/stores/uiStore.ts`
+
+**改动**：
+```ts
+// 初始状态改为 false
+isLoading: false,
+loadingMessage: '',
+levelLoading: { 1: false }, // 改为 false
+levelProgress: { 1: '' },
+```
+
+**逻辑调整**：
+- 只有在发起请求时（`loadLevel1` 开始）才设置 loading
+- 页面渲染时如果数据已就绪，不显示 loading
+- 如果数据未就绪且请求进行中，显示 loading
+
+---
+
+### Phase 4: HTML preload link [可选优化]
+
+**目标**：浏览器在 HTML 解析时就开始下载 cells.arrow
+
+**修改文件**：`frontend/index.html`
+
+**改动**：
+```html
+<head>
+  <!-- 新增 preload -->
+  <link rel="preload" href="/api/cells" as="fetch" crossorigin>
+  <link rel="preload" href="/api/schema" as="fetch" crossorigin>
+</head>
+```
+
+**效果**：浏览器在解析 HTML 时就开始下载，不等 JS 执行
+
+---
+
+## 实施顺序
+
+| 顺序 | Phase | 必要性 | 说明 |
+|------|-------|--------|------|
+| 1 | Phase 1 | 核心 | 后端预热，影响最大 |
+| 2 | Phase 3 | 必须 | uiStore 初始状态调整，配合 Phase 1 |
+| 3 | Phase 2 | 推荐 | 前端预请求，Phase 1 后已足够快 |
+| 4 | Phase 4 | 可选 | HTML preload，边际优化 |
+
+---
+
+## 验证方法
+
+1. 启动后端，观察启动日志是否显示 "Backend data cache warmed up"
+2. 打开浏览器，访问 http://localhost:5174
+3. 观察是否**不再显示** "Loading integrated atlas" loading 状态
+4. 检查 Network tab，确认请求响应时间 < 100ms
+
+---
+
+## 预期结果
+
+- 用户打开页面时**不再看到 loading 状态**
+- 数据已预加载，页面渲染立即可用
+- 首屏加载时间从 ~5s 降到 ~0.5s
+
+---
+
+## 实施任务清单
+
+- [ ] **PRELOAD-01** 修改 `backend/server/app.py` 预热 cells_ipc 和 JSON 文件
+- [ ] **PRELOAD-02** 修改 `frontend/src/stores/uiStore.ts` 初始 loading 状态改为 false
+- [ ] **PRELOAD-03** 新增 `frontend/src/hooks/useAppPreload.ts` App 级预请求
+- [ ] **PRELOAD-04** 修改 `frontend/src/App.tsx` 接入 useAppPreload
+- [ ] **PRELOAD-05** [可选] 修改 `frontend/index.html` 添加 preload link
+- [ ] **PRELOAD-06** 验证：启动服务，打开页面确认无 loading 状态
