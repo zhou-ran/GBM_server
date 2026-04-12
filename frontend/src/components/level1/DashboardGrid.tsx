@@ -1,9 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { AGE_GROUP_COLORS, IDH_COLORS } from '../../lib/colors';
 import { paletteCss } from '../../lib/colorScales';
 import { useDataStore } from '../../stores/dataStore';
 import { StackedBar } from '../common/StackedBar';
-import { CompositionBoxPlot } from './CompositionBoxPlot';
+import { CompositionBoxPlot, GROUP_OPTIONS, type GroupBy } from './CompositionBoxPlot';
 import { HexbinMap } from './HexbinMap';
 
 type CountEntry = {
@@ -16,11 +16,13 @@ function DashboardCard({
   title,
   subtitle,
   className = '',
+  headerExtra,
   children,
 }: {
   title: string;
   subtitle?: string;
   className?: string;
+  headerExtra?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -30,8 +32,11 @@ function DashboardCard({
       <div className="flex h-full flex-col">
         <div className="border-b border-[var(--border)] px-4 py-3">
           <div className="text-[11px] uppercase tracking-[0.2em] text-[var(--text-muted)]">Dashboard</div>
-          <div className="mt-1 flex items-end justify-between gap-3">
-            <h3 className="text-base font-semibold text-[var(--text)]">{title}</h3>
+          <div className="mt-1 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              {headerExtra}
+              <h3 className="text-base font-semibold text-[var(--text)]">{title}</h3>
+            </div>
             {subtitle && <span className="text-xs text-[var(--text-muted)]">{subtitle}</span>}
           </div>
         </div>
@@ -96,6 +101,8 @@ function DonutCard({
 
 export function DashboardGrid() {
   const globalStats = useDataStore((s) => s.globalStats);
+  const [groupBy, setGroupBy] = useState<GroupBy>('IDH');
+  const [splitBy, setSplitBy] = useState<GroupBy | null>(null);
 
   const ageEntries = useMemo<CountEntry[]>(() => {
     const ageStats = globalStats?.by_column.age_Group5565 ?? {};
@@ -145,8 +152,35 @@ export function DashboardGrid() {
             </div>
           </DashboardCard>
 
-          <DashboardCard title="Composition Boxplot" subtitle="Senescence by group">
-            <CompositionBoxPlot />
+          <DashboardCard
+            title="Composition Boxplot"
+            subtitle="Senescence by group"
+            headerExtra={
+              <div className="flex items-center gap-1.5">
+                <select
+                  className="rounded-lg border border-[var(--border)] bg-[var(--control-bg)] px-2 py-1 text-xs text-[var(--text)]"
+                  value={groupBy}
+                  onChange={(e) => setGroupBy(e.target.value as GroupBy)}
+                >
+                  {GROUP_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+                <span className="text-[10px] text-[var(--text-muted)]">×</span>
+                <select
+                  className="rounded-lg border border-[var(--border)] bg-[var(--control-bg)] px-2 py-1 text-xs text-[var(--text)]"
+                  value={splitBy ?? ''}
+                  onChange={(e) => setSplitBy(e.target.value ? (e.target.value as GroupBy) : null)}
+                >
+                  <option value="">None</option>
+                  {GROUP_OPTIONS.filter((o) => o.value !== groupBy).map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+            }
+          >
+            <CompositionBoxPlot groupBy={groupBy} splitBy={splitBy} />
           </DashboardCard>
         </div>
 
