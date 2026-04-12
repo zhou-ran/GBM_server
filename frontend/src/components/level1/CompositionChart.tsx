@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { categoricalCss } from '../../lib/colorScales';
 import { useNavigationStore } from '../../stores/navigationStore';
 import { StackedBar } from '../common/StackedBar';
@@ -7,7 +8,8 @@ interface CompositionChartProps {
 }
 
 export function CompositionChart({ counts }: CompositionChartProps) {
-  const drillDown = useNavigationStore((s) => s.drillDown);
+  const navigate = useNavigate();
+  const setSelectedCellType = useNavigationStore((s) => s.setSelectedCellType);
   const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
   const total = entries.reduce((sum, [, value]) => sum + value, 0);
   const items = entries.map(([label, value], index) => ({ label, value, color: categoricalCss(index) }));
@@ -20,7 +22,10 @@ export function CompositionChart({ counts }: CompositionChartProps) {
       </div>
       <StackedBar
         items={items}
-        onSelect={(item) => drillDown({ level: 2, cellType: item.label })}
+        onSelect={(item) => {
+          setSelectedCellType(item.label);
+          navigate('/explorer');
+        }}
       />
       <div className="mt-4 space-y-2">
         {entries.map(([label, value], index) => (
@@ -28,7 +33,10 @@ export function CompositionChart({ counts }: CompositionChartProps) {
             key={label}
             type="button"
             className="flex w-full items-center gap-3 text-left"
-            onClick={() => drillDown({ level: 2, cellType: label })}
+            onClick={() => {
+              setSelectedCellType(label);
+              navigate('/explorer');
+            }}
           >
             <span className="h-2.5 w-2.5 rounded-full" style={{ background: categoricalCss(index) }} />
             <span className="flex-1 text-sm">{label}</span>

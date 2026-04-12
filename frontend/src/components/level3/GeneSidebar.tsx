@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useColorStore } from '../../stores/colorStore';
 import { useNavigationStore } from '../../stores/navigationStore';
 import { GeneAutocomplete } from './GeneAutocomplete';
@@ -8,11 +9,12 @@ export function GeneSidebar() {
   const selectedGene = useNavigationStore((s) => s.selectedGene);
   const selectedCellType = useNavigationStore((s) => s.selectedCellType);
   const selectedSubCluster = useNavigationStore((s) => s.selectedSubCluster);
-  const drillDown = useNavigationStore((s) => s.drillDown);
+  const setSelectedGene = useNavigationStore((s) => s.setSelectedGene);
   const loadGene = useColorStore((s) => s.loadGene);
   const geneName = useColorStore((s) => s.geneName);
   const signatureName = useColorStore((s) => s.signatureName);
   const isLoadingGene = useColorStore((s) => s.isLoadingGene);
+  const navigate = useNavigate();
   const [query, setQuery] = useState(selectedGene ?? '');
 
   useEffect(() => {
@@ -34,12 +36,18 @@ export function GeneSidebar() {
         <GeneAutocomplete
           value={query}
           onChange={setQuery}
-          onSelect={(gene) => void loadGene(gene)}
+          onSelect={(gene) => {
+            setSelectedGene(gene);
+            void loadGene(gene);
+          }}
         />
         <button
           type="button"
           className="mt-3 w-full rounded-xl bg-[var(--accent)] px-3 py-2 text-sm text-white disabled:opacity-50"
-          onClick={() => void loadGene(query)}
+          onClick={() => {
+            setSelectedGene(query);
+            void loadGene(query);
+          }}
           disabled={isLoadingGene || !query.trim()}
         >
           {isLoadingGene ? 'Loading...' : 'Load Gene'}
@@ -59,7 +67,7 @@ export function GeneSidebar() {
       <button
         type="button"
         className="mt-4 w-full rounded-xl border border-[var(--border)] bg-[var(--control-bg)] px-3 py-2 text-sm font-medium hover:bg-[var(--control-bg-hover)]"
-        onClick={() => drillDown({ level: 4, label: 'Trajectory' })}
+        onClick={() => navigate('/explorer')}
       >
         Open Trajectory & CellChat
       </button>

@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { useFilterStore } from '../../stores/filterStore';
 import { useNavigationStore } from '../../stores/navigationStore';
 import { useUIStore } from '../../stores/uiStore';
@@ -12,7 +13,8 @@ export function ClusterAnalysis() {
   const activeTab = useUIStore((s) => s.activeTab);
   const setActiveTab = useUIStore((s) => s.setActiveTab);
   const highlightDonor = useFilterStore((s) => s.highlightDonor);
-  const drillDown = useNavigationStore((s) => s.drillDown);
+  const setSelectedGene = useNavigationStore((s) => s.setSelectedGene);
+  const navigate = useNavigate();
   const { subtypeCounts, subtypeSenescence, filteredPatients, deGenes } = useClusterStats();
 
   const tabs = [
@@ -41,7 +43,10 @@ export function ClusterAnalysis() {
         <div className="mb-3 text-sm font-semibold">DE Waterfall</div>
         <WaterfallChart
           genes={deGenes}
-          onSelectGene={(gene) => drillDown({ level: 3, gene, label: gene })}
+          onSelectGene={(gene) => {
+            setSelectedGene(gene);
+            navigate('/explorer');
+          }}
         />
       </div>
     </div>

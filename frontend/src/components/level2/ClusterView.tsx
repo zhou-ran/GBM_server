@@ -3,6 +3,7 @@ import DeckGL from '@deck.gl/react';
 import { OrthographicView } from '@deck.gl/core';
 import { HeatmapLayer } from '@deck.gl/aggregation-layers';
 import { ScatterplotLayer, TextLayer } from '@deck.gl/layers';
+import { useNavigate } from 'react-router-dom';
 import { useClusterStats } from '../../hooks/useClusterStats';
 import { useNavigationStore } from '../../stores/navigationStore';
 import { useThemeStore } from '../../stores/themeStore';
@@ -15,10 +16,11 @@ const VIEW = new OrthographicView({ id: 'level2-ortho', flipY: false });
 export function ClusterView() {
   const { points, centroids } = useClusterStats();
   const selectedCellType = useNavigationStore((s) => s.selectedCellType);
-  const drillDown = useNavigationStore((s) => s.drillDown);
+  const setSelectedSubCluster = useNavigationStore((s) => s.setSelectedSubCluster);
   const viewState = useViewStore((s) => s.viewState);
   const setViewState = useViewStore((s) => s.setViewState);
   const theme = useThemeStore((s) => s.theme);
+  const navigate = useNavigate();
   const labelTheme = textLabelTheme(theme);
 
   const layers = useMemo(() => {
@@ -44,7 +46,11 @@ export function ClusterView() {
           getColor: labelTheme.text,
           outlineColor: labelTheme.outline,
           outlineWidth: 3,
-          onClick: (info) => info.object && drillDown({ level: 3, subCluster: info.object.label, label: info.object.label }),
+          onClick: (info) => {
+            if (!info.object) return;
+            setSelectedSubCluster(info.object.label);
+            navigate('/explorer');
+          },
         }),
       ];
     }
@@ -70,10 +76,14 @@ export function ClusterView() {
         getColor: labelTheme.text,
         outlineColor: labelTheme.outline,
         outlineWidth: 3,
-        onClick: (info) => info.object && drillDown({ level: 3, subCluster: info.object.label, label: info.object.label }),
+        onClick: (info) => {
+          if (!info.object) return;
+          setSelectedSubCluster(info.object.label);
+          navigate('/explorer');
+        },
       }),
     ];
-  }, [centroids, drillDown, labelTheme.outline, labelTheme.text, points]);
+  }, [centroids, labelTheme.outline, labelTheme.text, navigate, points, setSelectedSubCluster]);
 
   return (
     <div className="relative flex-1">

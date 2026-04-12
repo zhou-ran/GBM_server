@@ -30,7 +30,10 @@ export function ColorModeSelect() {
       >
         <option value="celltype">Cell Type</option>
         <option value="celltype2">Cell Type Level 2</option>
+        <option value="age">Age Group</option>
+        <option value="idh">IDH Status</option>
         <option value="senescence">Senescence Score</option>
+        <option value="signature">Signature Score</option>
         <option value="gene">Gene Expression</option>
       </select>
 

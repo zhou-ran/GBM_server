@@ -26,3 +26,128 @@ Thumbs.db
 
 # Claude Code
 .claude/
+# ============================================
+# Python
+# ============================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# ============================================
+# Node.js
+# ============================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build outputs
+frontend/dist/
+frontend/dist-ssr/
+*.local
+
+# ============================================
+# Data Files (Large / Generated)
+# ============================================
+# Raw and processed single-cell data
+*.h5ad
+*.zarr/
+*.parquet
+*.h5
+
+# Data directories
+backend/data/andata
+backend/data/*.coords.parquet
+backend/data/*.meta.parquet
+backend/data/*.de.parquet
+backend/data/*.genes.zarr/
+backend/data/*.zarr/
+backend/data/parquet/
+backend/parquet/
+
+# Archive / Backup
+backend/data/archive/
+*.bak
+*.backup
+
+# ============================================
+# IDE / Editor
+# ============================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# ============================================
+# Logs
+# ============================================
+logs/
+*.log
+lerna-debug.log*
+
+# ============================================
+# Project Specific - Dev Docs (Exclude from commit)
+# ============================================
+# Development planning docs (keep in working tree, don't commit)
+CLAUDE.md
+FRAMEWORK.md
+plans.md
+mimoplans.md
+oc_plans.md
+gp5_advice.md
+BUGFIX_REPORT.md
+DEBUGGING_SUMMARY.md
+ETL_PROGRESS.md
+FINAL_*.md
+VERIFICATION_*.md
+OPTIMIZATION_GUIDE.md
+rebuild.txt
+start.sh
+
+plans*.md
+todo.md
+TODO.md
+
+# Claude-specific
+.claude/
+
+# ============================================
+# Keep these empty directories (if needed)
+# ============================================
+# Uncomment if you want to track empty dirs
+# !backend/data/parquet/.gitkeep

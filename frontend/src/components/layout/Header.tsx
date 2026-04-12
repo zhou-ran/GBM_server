@@ -1,14 +1,14 @@
 /** Header — stats bar showing cell counts and render mode */
 
+import { useLocation } from 'react-router-dom';
 import { useDataStore } from '../../stores/dataStore';
 import { useFilterStore } from '../../stores/filterStore';
-import { useNavigationStore } from '../../stores/navigationStore';
 import { ThemeToggle } from '../common/ThemeToggle';
 
 export function Header() {
   const nCells = useDataStore((s) => s.nCells);
   const filterMask = useFilterStore((s) => s.filterMask);
-  const currentLevel = useNavigationStore((s) => s.currentLevel);
+  const { pathname } = useLocation();
 
   const filteredCount = filterMask
     ? filterMask.reduce((sum, v) => sum + v, 0)
@@ -21,7 +21,7 @@ export function Header() {
         <div className="flex gap-6">
           <span>Total: {nCells.toLocaleString()}</span>
           <span>Filtered: {filteredCount.toLocaleString()}</span>
-          <span>Level: {currentLevel}</span>
+          <span>Route: {pathname}</span>
         </div>
         <ThemeToggle />
       </div>

@@ -1,24 +1,29 @@
-import { Header } from './components/layout/Header';
-import { Breadcrumb } from './components/navigation/Breadcrumb';
-import { LevelRouter } from './components/navigation/LevelRouter';
-import { LevelTransition } from './components/navigation/LevelTransition';
+import { Suspense, lazy } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { LoadingOverlay } from './components/common/LoadingOverlay';
-import { useInitData } from './hooks/useInitData';
-import { useNavigationStore } from './stores/navigationStore';
+import { MainLayout } from './layouts/MainLayout';
+
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const ExplorerPage = lazy(() => import('./pages/ExplorerPage'));
+const AboutPage = lazy(() => import('./pages/AboutPage'));
 
 function App() {
-  useInitData();
-  const currentLevel = useNavigationStore((s) => s.currentLevel);
-
   return (
-    <div className="flex h-screen flex-col">
-      <Header />
-      <Breadcrumb />
-      <LevelTransition level={currentLevel}>
-        <LevelRouter />
-      </LevelTransition>
-      <LoadingOverlay />
-    </div>
+    <BrowserRouter>
+      <Suspense fallback={<LoadingOverlay />}>
+        <Routes>
+          <Route element={<MainLayout />}>
+            <Route index element={<DashboardPage />} />
+            <Route path="explorer" element={<ExplorerPage />}>
+              <Route path="cell/:cellId" element={null} />
+            </Route>
+            <Route path="about" element={<AboutPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Routes>
+        <LoadingOverlay />
+      </Suspense>
+    </BrowserRouter>
   );
 }
 

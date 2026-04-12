@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import DeckGL from '@deck.gl/react';
 import { OrthographicView, type PickingInfo } from '@deck.gl/core';
 import { PolygonLayer, TextLayer } from '@deck.gl/layers';
+import { useNavigate } from 'react-router-dom';
 import { useDataStore } from '../../stores/dataStore';
 import { useColorStore } from '../../stores/colorStore';
 import { useNavigationStore } from '../../stores/navigationStore';
@@ -28,8 +29,9 @@ export function HexbinMap() {
   const colorMode = useColorStore((s) => s.colorMode);
   const viewState = useViewStore((s) => s.viewState);
   const setViewState = useViewStore((s) => s.setViewState);
-  const drillDown = useNavigationStore((s) => s.drillDown);
+  const setSelectedCellType = useNavigationStore((s) => s.setSelectedCellType);
   const theme = useThemeStore((s) => s.theme);
+  const navigate = useNavigate();
   const [hovered, setHovered] = useState<{ x: number; y: number; bin: HexbinBin } | null>(null);
   const labelTheme = textLabelTheme(theme);
 
@@ -62,7 +64,8 @@ export function HexbinMap() {
         },
         onClick: (info: PickingInfo<(typeof polygonData)[number]>) => {
           if (!info.object) return;
-          drillDown({ level: 2, cellType: info.object.label });
+          setSelectedCellType(info.object.label);
+          navigate('/explorer');
         },
         onHover: (info: PickingInfo<(typeof polygonData)[number]>) => {
           if (!info.object || info.x === undefined || info.y === undefined) {
@@ -85,11 +88,12 @@ export function HexbinMap() {
         outlineWidth: 3,
         onClick: (info: PickingInfo<(typeof centroids)[number]>) => {
           if (!info.object) return;
-          drillDown({ level: 2, cellType: info.object.name });
+          setSelectedCellType(info.object.name);
+          navigate('/explorer');
         },
       }),
     ];
-  }, [bins, cellTypeNames, centroids, colorMode, drillDown, hexbin?.radius, labelTheme.outline, labelTheme.text, theme]);
+  }, [bins, cellTypeNames, centroids, colorMode, hexbin?.radius, labelTheme.outline, labelTheme.text, navigate, setSelectedCellType, theme]);
 
   return (
     <div className="relative flex-1">

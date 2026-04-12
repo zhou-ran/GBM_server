@@ -1,79 +1,119 @@
-/** useInitData — orchestrates initial data loading */
-
 import { useEffect } from 'react';
 import { useDataStore } from '../stores/dataStore';
 import { useFilterStore } from '../stores/filterStore';
-import { useViewStore } from '../stores/viewStore';
 import { useUIStore } from '../stores/uiStore';
-import { useNavigationStore } from '../stores/navigationStore';
+import { useViewStore } from '../stores/viewStore';
 
-export function useLevel1Data() {
+function centerViewOnBounds() {
+  const { schema } = useDataStore.getState();
+  if (!schema?.umap_bounds) {
+    return;
+  }
+
+  const { xmin, xmax, ymin, ymax } = schema.umap_bounds;
+  useViewStore.getState().setViewState({
+    target: [(xmin + xmax) / 2, (ymin + ymax) / 2, 0],
+  });
+}
+
+export function useInitDashboardData() {
   const loadLevel1 = useDataStore((s) => s.loadLevel1);
-  const initFilters = useFilterStore((s) => s.initFilters);
-  const setViewState = useViewStore((s) => s.setViewState);
+  const isLevel1Loaded = useDataStore((s) => s.isLevel1Loaded);
   const setLevelLoading = useUIStore((s) => s.setLevelLoading);
 
   useEffect(() => {
     let cancelled = false;
 
     async function init() {
+      if (isLevel1Loaded) {
+        return;
+      }
+
       setLevelLoading(1, true, 'Loading atlas overview...');
       try {
-        await loadLevel1((msg) => {
-          if (!cancelled) setLevelLoading(1, true, msg);
+        await loadLevel1((message) => {
+          if (!cancelled) {
+            setLevelLoading(1, true, message);
+          }
         });
 
-        if (cancelled) return;
-
-        const { schema } = useDataStore.getState();
-        if (schema) {
-          initFilters(schema, {});
+        if (cancelled) {
+          return;
         }
 
-        if (schema?.umap_bounds) {
-          const b = schema.umap_bounds;
-          const cx = (b.xmin + b.xmax) / 2;
-          const cy = (b.ymin + b.ymax) / 2;
-          setViewState({ target: [cx, cy, 0] });
-        }
-
+        centerViewOnBounds();
         setLevelLoading(1, false);
-      } catch (err) {
-        console.error('Failed to load data:', err);
-        setLevelLoading(1, true, `Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+        setLevelLoading(1, true, `Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     }
 
-    init();
-    return () => { cancelled = true; };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    void init();
+    return () => {
+      cancelled = true;
+    };
+  }, [isLevel1Loaded, loadLevel1, setLevelLoading]);
 }
 
-export function useLevel2Data() {
-  const currentLevel = useNavigationStore((s) => s.currentLevel);
+export function useInitExplorerData() {
+  const loadLevel1 = useDataStore((s) => s.loadLevel1);
   const loadLevel2 = useDataStore((s) => s.loadLevel2);
+  const isLevel1Loaded = useDataStore((s) => s.isLevel1Loaded);
   const isLevel2Loaded = useDataStore((s) => s.isLevel2Loaded);
+  const filterMask = useFilterStore((s) => s.filterMask);
   const initFilters = useFilterStore((s) => s.initFilters);
   const setLevelLoading = useUIStore((s) => s.setLevelLoading);
 
   useEffect(() => {
     let cancelled = false;
 
-    async function load() {
-      if (currentLevel < 2 || isLevel2Loaded) return;
+    async function init() {
+      setLevelLoading(2, true, 'Loading explorer...');
 
-      setLevelLoading(2, true, 'Loading cell-level atlas...');
       try {
-        await loadLevel2((msg) => {
-          if (!cancelled) setLevelLoading(2, true, msg);
-        });
+        if (!isLevel1Loaded) {
+          await loadLevel1((message) => {
+            if (!cancelled) {
+              setLevelLoading(1, true, message);
+            }
+          });
+        }
 
-        if (cancelled) return;
+        if (!isLevel2Loaded) {
+          await loadLevel2((message) => {
+            if (!cancelled) {
+              setLevelLoading(2, true, message);
+            }
+          });
+        }
 
-        const { schema, cellTypeCodes, cellType2Codes, idhCodes, stageCodes, ageCodes, sexCodes, donorCodes } =
-          useDataStore.getState();
+        if (cancelled) {
+          return;
+        }
 
-        if (schema && cellTypeCodes && cellType2Codes && idhCodes && stageCodes && ageCodes && sexCodes && donorCodes) {
+        const {
+          schema,
+          cellTypeCodes,
+          cellType2Codes,
+          idhCodes,
+          stageCodes,
+          ageCodes,
+          sexCodes,
+          donorCodes,
+        } = useDataStore.getState();
+
+        if (
+          schema &&
+          cellTypeCodes &&
+          cellType2Codes &&
+          idhCodes &&
+          stageCodes &&
+          ageCodes &&
+          sexCodes &&
+          donorCodes &&
+          !filterMask
+        ) {
           initFilters(schema, {
             CellType: cellTypeCodes,
             CellType_Level2: cellType2Codes,
@@ -85,19 +125,18 @@ export function useLevel2Data() {
           });
         }
 
+        centerViewOnBounds();
+        setLevelLoading(1, false);
         setLevelLoading(2, false);
-      } catch (err) {
-        console.error('Failed to load level 2 data:', err);
-        setLevelLoading(2, true, `Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      } catch (error) {
+        console.error('Failed to load explorer data:', error);
+        setLevelLoading(2, true, `Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     }
 
-    load();
-    return () => { cancelled = true; };
-  }, [currentLevel, initFilters, isLevel2Loaded, loadLevel2, setLevelLoading]);
-}
-
-export function useInitData() {
-  useLevel1Data();
-  useLevel2Data();
+    void init();
+    return () => {
+      cancelled = true;
+    };
+  }, [filterMask, initFilters, isLevel1Loaded, isLevel2Loaded, loadLevel1, loadLevel2, setLevelLoading]);
 }

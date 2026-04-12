@@ -13,6 +13,18 @@ export const CELLTYPE_COLORS: [number, number, number, number][] = [
   [253, 180, 98, 200],  // TAM
 ];
 
+export const AGE_GROUP_COLORS: [number, number, number, number][] = [
+  [59, 130, 246, 210],
+  [245, 158, 11, 210],
+  [239, 68, 68, 210],
+];
+
+export const IDH_COLORS: [number, number, number, number][] = [
+  [99, 102, 241, 210],
+  [16, 185, 129, 210],
+  [107, 114, 128, 210],
+];
+
 // Senescence continuous color: blue → yellow → red
 export function senescenceColor(value: number): [number, number, number, number] {
   const v = Math.max(0, Math.min(1, value));

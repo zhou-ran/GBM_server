@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { useNavigationStore } from '../../stores/navigationStore';
 import { categoricalCss } from '../../lib/colorScales';
 
@@ -6,7 +7,8 @@ interface SubtypeBreakdownProps {
 }
 
 export function SubtypeBreakdown({ counts }: SubtypeBreakdownProps) {
-  const drillDown = useNavigationStore((s) => s.drillDown);
+  const navigate = useNavigate();
+  const setSelectedSubCluster = useNavigationStore((s) => s.setSelectedSubCluster);
   const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
   const total = entries.reduce((sum, [, value]) => sum + value, 0);
 
@@ -19,7 +21,10 @@ export function SubtypeBreakdown({ counts }: SubtypeBreakdownProps) {
             key={label}
             type="button"
             className="w-full rounded-xl border border-[var(--border)] bg-[var(--control-bg)] px-3 py-2 text-left hover:border-[var(--accent)]"
-            onClick={() => drillDown({ level: 3, subCluster: label, label })}
+            onClick={() => {
+              setSelectedSubCluster(label);
+              navigate('/explorer');
+            }}
           >
             <div className="flex items-center justify-between text-sm">
               <span>{label}</span>
