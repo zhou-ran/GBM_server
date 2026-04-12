@@ -1,14 +1,17 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useDataStore } from '../../stores/dataStore';
 import { useColorStore } from '../../stores/colorStore';
+import { GeneAutocomplete } from '../level3/GeneAutocomplete';
 import { MiniHistogram } from '../common/MiniHistogram';
 import { CompositionChart } from './CompositionChart';
 
 const LEVEL1_OPTIONS = [
-  { value: 'celltype', label: 'Cell Type', enabled: true },
-  { value: 'age', label: 'Age', enabled: false },
-  { value: 'idh', label: 'IDH', enabled: false },
-  { value: 'senescence', label: 'Senescence', enabled: true },
+  { value: 'celltype', label: 'Cell Type' },
+  { value: 'celltype2', label: 'Cell Type Level 2' },
+  { value: 'age', label: 'Age Group' },
+  { value: 'idh', label: 'IDH Status' },
+  { value: 'senescence', label: 'Senescence' },
+  { value: 'gene', label: 'Gene Expression' },
 ] as const;
 
 export function GlobalSidebar() {
@@ -16,6 +19,10 @@ export function GlobalSidebar() {
   const centroids = useDataStore((s) => s.centroids);
   const colorMode = useColorStore((s) => s.colorMode);
   const setColorMode = useColorStore((s) => s.setColorMode);
+  const loadGene = useColorStore((s) => s.loadGene);
+  const geneName = useColorStore((s) => s.geneName);
+  const isLoadingGene = useColorStore((s) => s.isLoadingGene);
+  const [geneQuery, setGeneQuery] = useState(geneName ?? '');
 
   const composition = globalStats?.by_column.CellType ?? {};
   const patientStats = useMemo(
@@ -41,30 +48,55 @@ export function GlobalSidebar() {
       }, [0, 0, 0, 0, 0]);
   }, [centroids]);
 
+  const showGeneControl = colorMode === 'gene' || !!geneName;
+
   return (
     <aside className="w-80 shrink-0 overflow-y-auto border-r border-[var(--border)] bg-[var(--surface)] px-4 py-4">
       <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4">
         <h3 className="mb-3 text-sm font-semibold">Color By</h3>
-        <div className="space-y-2">
+        <select
+          className="w-full rounded-xl border border-[var(--border)] bg-[var(--control-bg)] px-3 py-2 text-sm text-[var(--text)]"
+          value={LEVEL1_OPTIONS.some((option) => option.value === colorMode) ? colorMode : 'celltype'}
+          onChange={(event) => setColorMode(event.target.value as typeof LEVEL1_OPTIONS[number]['value'])}
+        >
           {LEVEL1_OPTIONS.map((option) => (
-            <label
-              key={option.value}
-              className={`flex items-center justify-between rounded-xl border px-3 py-2 text-sm ${
-                colorMode === option.value ? 'border-[var(--accent)] bg-[var(--accent)]/10' : 'border-[var(--border)]'
-              } ${option.enabled ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}
-            >
-              <span>{option.label}</span>
-              <input
-                type="radio"
-                checked={colorMode === option.value}
-                onChange={() => option.enabled && setColorMode(option.value)}
-                disabled={!option.enabled}
-              />
-            </label>
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
           ))}
-        </div>
+        </select>
+
+        {showGeneControl && (
+          <div className="mt-3">
+            <GeneAutocomplete
+              value={geneQuery}
+              onChange={setGeneQuery}
+              onSelect={(gene) => {
+                setColorMode('gene');
+                void loadGene(gene);
+              }}
+            />
+            <button
+              type="button"
+              className="mt-3 w-full rounded-xl bg-[var(--accent)] px-3 py-2 text-sm text-white disabled:opacity-50"
+              onClick={() => {
+                const gene = geneQuery.trim();
+                if (!gene) return;
+                setColorMode('gene');
+                void loadGene(gene);
+              }}
+              disabled={isLoadingGene || !geneQuery.trim()}
+            >
+              {isLoadingGene ? 'Loading gene...' : 'Apply Gene'}
+            </button>
+            <div className="mt-2 text-xs text-[var(--text-muted)]">
+              Type at least two letters to get autocomplete suggestions.
+            </div>
+          </div>
+        )}
+
         <p className="mt-3 text-xs text-[var(--text-muted)]">
-          Age and IDH color aggregation need per-hex metadata and are still pending.
+          The homepage now supports cell type, subtype, age, IDH, senescence, and direct gene-expression coloring.
         </p>
       </section>
 

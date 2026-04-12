@@ -8,7 +8,7 @@ import { useColorStore } from '../../stores/colorStore';
 import { useNavigationStore } from '../../stores/navigationStore';
 import { useThemeStore } from '../../stores/themeStore';
 import { useViewStore } from '../../stores/viewStore';
-import { categoricalColor } from '../../lib/colorScales';
+import { ageGroupColor, categoricalColor, idhColor } from '../../lib/colorScales';
 import { mapBackground, senescenceColor, textLabelTheme } from '../../lib/colors';
 import { DASHBOARD_SAMPLE_SIZE } from '../../lib/constants';
 import { Tooltip } from '../common/Tooltip';
@@ -129,9 +129,14 @@ export function HexbinMap() {
   const coords = useDataStore((s) => s.coords);
   const senescence = useDataStore((s) => s.senescence);
   const cellTypeCodes = useDataStore((s) => s.cellTypeCodes);
+  const cellType2Codes = useDataStore((s) => s.cellType2Codes);
+  const ageCodes = useDataStore((s) => s.ageCodes);
+  const idhCodes = useDataStore((s) => s.idhCodes);
   const loadLevel2 = useDataStore((s) => s.loadLevel2);
   const isLevel2Loaded = useDataStore((s) => s.isLevel2Loaded);
   const colorMode = useColorStore((s) => s.colorMode);
+  const geneExpr = useColorStore((s) => s.geneExpr);
+  const signatureScore = useColorStore((s) => s.signatureScore);
   const viewState = useViewStore((s) => s.viewState);
   const setViewState = useViewStore((s) => s.setViewState);
   const setSelectedCellType = useNavigationStore((s) => s.setSelectedCellType);
@@ -183,8 +188,27 @@ export function HexbinMap() {
           getRadius: 2.2,
           radiusMinPixels: 1.5,
           radiusMaxPixels: 4,
-          getFillColor: (d: SampledCell) =>
-            colorMode === 'senescence' ? senescenceColor(d.senescence) : categoricalColor(d.cellTypeCode),
+          getFillColor: (d: SampledCell) => {
+            if (colorMode === 'gene' && geneExpr) {
+              return senescenceColor(geneExpr[d.index]);
+            }
+            if (colorMode === 'signature' && signatureScore) {
+              return senescenceColor(signatureScore[d.index]);
+            }
+            if (colorMode === 'celltype2' && cellType2Codes) {
+              return categoricalColor(cellType2Codes[d.index]);
+            }
+            if (colorMode === 'age' && ageCodes) {
+              return ageGroupColor(ageCodes[d.index]);
+            }
+            if (colorMode === 'idh' && idhCodes) {
+              return idhColor(idhCodes[d.index]);
+            }
+            if (colorMode === 'senescence') {
+              return senescenceColor(d.senescence);
+            }
+            return categoricalColor(d.cellTypeCode);
+          },
           onClick: (info: PickingInfo<SampledCell>) => {
             if (!info.object) return;
             setSelectedCellType(info.object.cellTypeName);
@@ -198,7 +222,7 @@ export function HexbinMap() {
             setHovered({ x: info.x, y: info.y, kind: 'cell', cell: info.object });
           },
           updateTriggers: {
-            getFillColor: [colorMode],
+            getFillColor: [ageCodes, cellType2Codes, colorMode, geneExpr, idhCodes, signatureScore],
           },
         }),
         new TextLayer({
@@ -279,14 +303,19 @@ export function HexbinMap() {
     cellTypeNames,
     centroids,
     colorMode,
+    geneExpr,
     hexbin?.radius,
+    idhCodes,
     labelTheme.outline,
     labelTheme.text,
     navigate,
     sampledCells,
     setSelectedCellType,
+    signatureScore,
     theme,
     useSampledScatter,
+    ageCodes,
+    cellType2Codes,
   ]);
 
   return (
