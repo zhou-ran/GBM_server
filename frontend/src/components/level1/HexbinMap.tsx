@@ -391,7 +391,7 @@ export function HexbinMap() {
   ]);
 
   return (
-    <div className="relative flex-1">
+    <div className="relative h-full min-h-[320px]">
       <DeckGL
         views={VIEW}
         controller={true}

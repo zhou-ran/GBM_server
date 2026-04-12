@@ -6,7 +6,6 @@ import { useDataStore } from '../../stores/dataStore';
 import { useColorStore } from '../../stores/colorStore';
 import { useNavigationStore } from '../../stores/navigationStore';
 import { Legend } from '../color/Legend';
-import { MiniHistogram } from '../common/MiniHistogram';
 import { StackedBar } from '../common/StackedBar';
 import { GeneAutocomplete } from '../level3/GeneAutocomplete';
 import { HexbinMap } from './HexbinMap';
@@ -237,18 +236,6 @@ export function DashboardGrid() {
       }));
   }, [globalStats]);
 
-  const senescenceHistogram = useMemo(() => {
-    if (centroids.length === 0) return [0, 0, 0, 0, 0, 0];
-    return centroids
-      .map((centroid) => centroid.senescence_mean)
-      .sort((a, b) => a - b)
-      .reduce<number[]>((bins, value) => {
-        const index = Math.min(bins.length - 1, Math.floor(value * bins.length));
-        bins[index] += 1;
-        return bins;
-      }, [0, 0, 0, 0, 0, 0]);
-  }, [centroids]);
-
   const topCellTypes = cellTypeEntries.slice(0, 6);
 
   return (
@@ -270,55 +257,57 @@ export function DashboardGrid() {
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:auto-rows-[220px] md:grid-cols-2 xl:grid-cols-4">
+          <div className="flex flex-col gap-4 md:row-span-4 xl:col-span-1 xl:row-span-4">
+            <DashboardCard title="Atlas Snapshot" subtitle="Core cohort metrics" className="flex-1">
+              <div className="grid h-full grid-cols-2 gap-3">
+                <StatTile label="Cells" value={nCells.toLocaleString()} accent="var(--accent)" />
+                <StatTile label="Donors" value={donorCount.toLocaleString()} accent="rgba(16,185,129,0.9)" />
+                <StatTile label="Cell Types" value={String(cellTypeEntries.length)} accent="rgba(244,114,182,0.9)" />
+                <StatTile label="Mean Senescence" value={meanSenescence.toFixed(3)} accent="rgba(245,158,11,0.9)" />
+              </div>
+            </DashboardCard>
+
+            <CompactColorCard />
+
+            <DashboardCard title="Cell Annotation Distribution" subtitle={`${cellTypeEntries.length} annotation groups`} className="flex-1">
+              <div className="flex h-full flex-col gap-4">
+                <StackedBar
+                  items={cellTypeEntries}
+                  onSelect={(item) => {
+                    setSelectedCellType(item.label);
+                    navigate('/explorer');
+                  }}
+                />
+                <div className="space-y-2 overflow-auto pr-1">
+                  {topCellTypes.map((item) => (
+                    <button
+                      key={item.label}
+                      type="button"
+                      className="flex w-full items-center gap-3 rounded-xl px-2 py-1.5 text-left hover:bg-[var(--control-bg)]"
+                      onClick={() => {
+                        setSelectedCellType(item.label);
+                        navigate('/explorer');
+                      }}
+                    >
+                      <span className="h-2.5 w-2.5 rounded-full" style={{ background: item.color }} />
+                      <span className="flex-1 truncate text-sm text-[var(--text)]">{item.label}</span>
+                      <span className="text-xs text-[var(--text-muted)]">
+                        {((item.value / Math.max(nCells, 1)) * 100).toFixed(1)}%
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </DashboardCard>
+          </div>
+
           <DashboardCard
             title="UMAP Atlas"
             subtitle="Interactive WebGL overview"
-            className="md:col-span-2 md:row-span-2"
+            className="md:col-span-2 md:row-span-2 xl:col-span-3"
           >
             <div className="h-full min-h-[420px] overflow-hidden rounded-[1.25rem] border border-[var(--border)] bg-[var(--surface-overlay)]">
               <HexbinMap />
-            </div>
-          </DashboardCard>
-
-          <DashboardCard title="Atlas Snapshot" subtitle="Core cohort metrics">
-            <div className="grid h-full grid-cols-2 gap-3">
-              <StatTile label="Cells" value={nCells.toLocaleString()} accent="var(--accent)" />
-              <StatTile label="Donors" value={donorCount.toLocaleString()} accent="rgba(16,185,129,0.9)" />
-              <StatTile label="Cell Types" value={String(cellTypeEntries.length)} accent="rgba(244,114,182,0.9)" />
-              <StatTile label="Mean Senescence" value={meanSenescence.toFixed(3)} accent="rgba(245,158,11,0.9)" />
-            </div>
-          </DashboardCard>
-
-          <CompactColorCard />
-
-          <DashboardCard title="Cell Annotation Distribution" subtitle={`${cellTypeEntries.length} annotation groups`}>
-            <div className="flex h-full flex-col gap-4">
-              <StackedBar
-                items={cellTypeEntries}
-                onSelect={(item) => {
-                  setSelectedCellType(item.label);
-                  navigate('/explorer');
-                }}
-              />
-              <div className="space-y-2 overflow-auto pr-1">
-                {topCellTypes.map((item) => (
-                  <button
-                    key={item.label}
-                    type="button"
-                    className="flex w-full items-center gap-3 rounded-xl px-2 py-1.5 text-left hover:bg-[var(--control-bg)]"
-                    onClick={() => {
-                      setSelectedCellType(item.label);
-                      navigate('/explorer');
-                    }}
-                  >
-                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: item.color }} />
-                    <span className="flex-1 truncate text-sm text-[var(--text)]">{item.label}</span>
-                    <span className="text-xs text-[var(--text-muted)]">
-                      {((item.value / Math.max(nCells, 1)) * 100).toFixed(1)}%
-                    </span>
-                  </button>
-                ))}
-              </div>
             </div>
           </DashboardCard>
 
@@ -326,45 +315,30 @@ export function DashboardGrid() {
 
           <DonutCard title="IDH Split" subtitle="Tumor genotype mix" items={idhEntries} />
 
-          <DashboardCard title="Stage and Sex" subtitle="Clinical composition">
-            <div className="grid h-full grid-cols-1 gap-4">
-              <div>
-                <div className="mb-2 text-xs uppercase tracking-[0.16em] text-[var(--text-muted)]">Stage</div>
-                <StackedBar items={stageEntries} />
-                <div className="mt-3 space-y-2">
-                  {stageEntries.slice(0, 4).map((item) => (
-                    <div key={item.label} className="flex items-center gap-2 text-sm">
-                      <span className="h-2.5 w-2.5 rounded-full" style={{ background: item.color }} />
-                      <span className="flex-1 truncate">{item.label}</span>
-                      <span className="text-xs text-[var(--text-muted)]">{item.value.toLocaleString()}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <div className="mb-2 text-xs uppercase tracking-[0.16em] text-[var(--text-muted)]">Sex</div>
-                <StackedBar items={sexEntries} />
-                <div className="mt-3 space-y-2">
-                  {sexEntries.map((item) => (
-                    <div key={item.label} className="flex items-center gap-2 text-sm">
-                      <span className="h-2.5 w-2.5 rounded-full" style={{ background: item.color }} />
-                      <span className="flex-1 truncate">{item.label}</span>
-                      <span className="text-xs text-[var(--text-muted)]">{item.value.toLocaleString()}</span>
-                    </div>
-                  ))}
-                </div>
+          <DashboardCard title="Stage Composition" subtitle="Clinical staging across the cohort">
+            <div className="flex h-full flex-col gap-4">
+              <StackedBar items={stageEntries} />
+              <div className="grid grid-cols-1 gap-2 overflow-auto pr-1">
+                {stageEntries.map((item) => (
+                  <div key={item.label} className="flex items-center gap-2 text-sm">
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: item.color }} />
+                    <span className="flex-1 truncate">{item.label}</span>
+                    <span className="text-xs text-[var(--text-muted)]">{item.value.toLocaleString()}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </DashboardCard>
 
-          <DashboardCard title="Senescence Spread" subtitle="Cluster-level mean distribution">
-            <div className="flex h-full flex-col justify-between gap-4">
-              <MiniHistogram values={senescenceHistogram} color="linear-gradient(180deg, #f97316, #0ea5e9)" />
-              <div className="grid grid-cols-3 gap-3 text-center">
-                {senescenceHistogram.map((value, index) => (
-                  <div key={`${index}-${value}`} className="rounded-2xl border border-[var(--border)] bg-[var(--surface-overlay)] px-2 py-3">
-                    <div className="text-[10px] uppercase tracking-[0.16em] text-[var(--text-muted)]">Bin {index + 1}</div>
-                    <div className="mt-2 text-lg font-semibold">{value}</div>
+          <DashboardCard title="Sex Composition" subtitle="Demographic split">
+            <div className="flex h-full flex-col gap-4">
+              <StackedBar items={sexEntries} />
+              <div className="grid grid-cols-1 gap-2 overflow-auto pr-1">
+                {sexEntries.map((item) => (
+                  <div key={item.label} className="flex items-center gap-2 text-sm">
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: item.color }} />
+                    <span className="flex-1 truncate">{item.label}</span>
+                    <span className="text-xs text-[var(--text-muted)]">{item.value.toLocaleString()}</span>
                   </div>
                 ))}
               </div>
