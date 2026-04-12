@@ -43,7 +43,14 @@ function buildSampledCells(
     return [];
   }
 
-  const categoryCount = Math.max(cellTypeNames.length, Math.max(...cellTypeCodes) + 1);
+  let maxCode = 0;
+  for (let i = 0; i < total; i++) {
+    if (cellTypeCodes[i] > maxCode) {
+      maxCode = cellTypeCodes[i];
+    }
+  }
+
+  const categoryCount = Math.max(cellTypeNames.length, maxCode + 1);
   const counts = new Array<number>(categoryCount).fill(0);
   for (let i = 0; i < total; i++) {
     counts[cellTypeCodes[i]] += 1;
@@ -203,6 +210,7 @@ export function HexbinMap() {
           getSize: 14,
           getColor: labelTheme.text,
           fontWeight: 700,
+          fontSettings: { sdf: true },
           outlineColor: labelTheme.outline,
           outlineWidth: 3,
           onClick: (info: PickingInfo<(typeof centroids)[number]>) => {
@@ -256,6 +264,7 @@ export function HexbinMap() {
         getSize: 14,
         getColor: labelTheme.text,
         fontWeight: 700,
+        fontSettings: { sdf: true },
         outlineColor: labelTheme.outline,
         outlineWidth: 3,
         onClick: (info: PickingInfo<(typeof centroids)[number]>) => {
