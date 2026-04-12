@@ -26,6 +26,8 @@ export function useInitDashboardData() {
 
     async function init() {
       if (isLevel1Loaded) {
+        centerViewOnBounds();
+        setLevelLoading(1, false);
         return;
       }
 
@@ -72,6 +74,13 @@ export function useInitExplorerData() {
       setLevelLoading(2, true, 'Loading explorer...');
 
       try {
+        if (isLevel1Loaded && isLevel2Loaded) {
+          centerViewOnBounds();
+          setLevelLoading(1, false);
+          setLevelLoading(2, false);
+          return;
+        }
+
         if (!isLevel1Loaded) {
           await loadLevel1((message) => {
             if (!cancelled) {
