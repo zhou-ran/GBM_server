@@ -24,6 +24,11 @@ type SampledCell = {
   senescence: number;
 };
 
+type LabelPoint = {
+  label: string;
+  position: [number, number];
+};
+
 function buildHexagon(x: number, y: number, radius: number): [number, number][] {
   return new Array(6).fill(null).map((_, index) => {
     const angle = (Math.PI / 3) * index;
@@ -154,6 +159,18 @@ export function HexbinMap() {
     () => hexbin?.celltype_names ?? schema?.columns.find((column) => column.name === 'CellType')?.categories ?? [],
     [hexbin, schema],
   );
+  const cellType2Names = useMemo(
+    () => schema?.columns.find((column) => column.name === 'CellType_Level2')?.categories ?? [],
+    [schema],
+  );
+  const ageGroupNames = useMemo(
+    () => schema?.columns.find((column) => column.name === 'age_Group5565')?.categories ?? [],
+    [schema],
+  );
+  const idhNames = useMemo(
+    () => schema?.columns.find((column) => column.name === 'IDH')?.categories ?? [],
+    [schema],
+  );
 
   const sampledCells = useMemo(() => {
     if (!coords || !senescence || !cellTypeCodes) {
@@ -163,6 +180,56 @@ export function HexbinMap() {
   }, [cellTypeCodes, cellTypeNames, coords, senescence]);
 
   const useSampledScatter = sampledCells.length > 0;
+
+  const labelPoints = useMemo<LabelPoint[]>(() => {
+    if (!useSampledScatter) {
+      if (colorMode === 'celltype') {
+        return centroids.map((centroid) => ({
+          label: centroid.name,
+          position: [centroid.x, centroid.y],
+        }));
+      }
+      return [];
+    }
+
+    if (colorMode === 'senescence' || colorMode === 'gene' || colorMode === 'signature') {
+      return [];
+    }
+
+    const buckets = new Map<string, { x: number; y: number; count: number }>();
+    for (const cell of sampledCells) {
+      let label: string | null = null;
+      if (colorMode === 'celltype') {
+        label = cell.cellTypeName;
+      } else if (colorMode === 'celltype2' && cellType2Codes) {
+        label = cellType2Names[cellType2Codes[cell.index]] ?? null;
+      } else if (colorMode === 'age' && ageCodes) {
+        label = ageGroupNames[ageCodes[cell.index]] ?? null;
+      } else if (colorMode === 'idh' && idhCodes) {
+        label = idhNames[idhCodes[cell.index]] ?? null;
+      }
+
+      if (!label) {
+        continue;
+      }
+
+      const bucket = buckets.get(label) ?? { x: 0, y: 0, count: 0 };
+      bucket.x += cell.position[0];
+      bucket.y += cell.position[1];
+      bucket.count += 1;
+      buckets.set(label, bucket);
+    }
+
+    return Array.from(buckets.entries())
+      .map(([label, bucket]) => ({
+        label,
+        position: [bucket.x / bucket.count, bucket.y / bucket.count] as [number, number],
+        count: bucket.count,
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, colorMode === 'celltype2' ? 12 : 9)
+      .map(({ label, position }) => ({ label, position }));
+  }, [ageCodes, ageGroupNames, cellType2Codes, cellType2Names, centroids, colorMode, idhCodes, idhNames, sampledCells, useSampledScatter]);
 
   useEffect(() => {
     if (isLevel2Loaded) {
@@ -227,20 +294,22 @@ export function HexbinMap() {
         }),
         new TextLayer({
           id: 'level1-centroids',
-          data: centroids,
+          data: labelPoints,
           pickable: true,
-          getPosition: (d) => [d.x, d.y],
-          getText: (d) => d.name,
+          getPosition: (d: LabelPoint) => d.position,
+          getText: (d: LabelPoint) => d.label,
           getSize: 14,
           getColor: labelTheme.text,
           fontWeight: 700,
           fontSettings: { sdf: true },
           outlineColor: labelTheme.outline,
           outlineWidth: 3,
-          onClick: (info: PickingInfo<(typeof centroids)[number]>) => {
+          onClick: (info: PickingInfo<LabelPoint>) => {
             if (!info.object) return;
-            setSelectedCellType(info.object.name);
-            navigate('/explorer');
+            if (colorMode === 'celltype') {
+              setSelectedCellType(info.object.label);
+              navigate('/explorer');
+            }
           },
         }),
       ];
@@ -281,31 +350,34 @@ export function HexbinMap() {
       }),
       new TextLayer({
         id: 'level1-centroids',
-        data: centroids,
+        data: colorMode === 'celltype' ? labelPoints : [],
         pickable: true,
-        getPosition: (d) => [d.x, d.y],
-        getText: (d) => d.name,
+        getPosition: (d: LabelPoint) => d.position,
+        getText: (d: LabelPoint) => d.label,
         getSize: 14,
         getColor: labelTheme.text,
         fontWeight: 700,
         fontSettings: { sdf: true },
         outlineColor: labelTheme.outline,
         outlineWidth: 3,
-        onClick: (info: PickingInfo<(typeof centroids)[number]>) => {
+        onClick: (info: PickingInfo<LabelPoint>) => {
           if (!info.object) return;
-          setSelectedCellType(info.object.name);
+          setSelectedCellType(info.object.label);
           navigate('/explorer');
         },
       }),
     ];
   }, [
+    ageGroupNames,
     bins,
+    cellType2Names,
     cellTypeNames,
-    centroids,
     colorMode,
     geneExpr,
     hexbin?.radius,
+    labelPoints,
     idhCodes,
+    idhNames,
     labelTheme.outline,
     labelTheme.text,
     navigate,

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useDataStore } from '../../stores/dataStore';
 import { useColorStore } from '../../stores/colorStore';
+import { Legend } from '../color/Legend';
 import { GeneAutocomplete } from '../level3/GeneAutocomplete';
 import { MiniHistogram } from '../common/MiniHistogram';
 import { CompositionChart } from './CompositionChart';
@@ -95,9 +96,9 @@ export function GlobalSidebar() {
           </div>
         )}
 
-        <p className="mt-3 text-xs text-[var(--text-muted)]">
-          The homepage now supports cell type, subtype, age, IDH, senescence, and direct gene-expression coloring.
-        </p>
+        <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--control-bg)] p-3">
+          <Legend />
+        </div>
       </section>
 
       <div className="mt-4">

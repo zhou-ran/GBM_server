@@ -30,6 +30,8 @@ function CategoryLegend({
 
 export function Legend() {
   const colorMode = useColorStore((s) => s.colorMode);
+  const geneName = useColorStore((s) => s.geneName);
+  const signatureName = useColorStore((s) => s.signatureName);
   const schema = useDataStore((s) => s.schema);
 
   if (!schema) return null;
@@ -85,6 +87,13 @@ export function Legend() {
         <h3 className="text-xs font-semibold uppercase text-[var(--text-muted)] tracking-wider">
           Legend
         </h3>
+        <div className="text-xs text-[var(--text-muted)]">
+          {colorMode === 'gene'
+            ? `Feature: ${geneName ?? 'Gene expression'}`
+            : colorMode === 'signature'
+              ? `Feature: ${signatureName ?? 'Signature score'}`
+              : 'Feature: Senescence score'}
+        </div>
         <div
           className="h-3 rounded"
           style={{
