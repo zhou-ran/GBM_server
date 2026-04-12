@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import DeckGL from '@deck.gl/react';
 import { OrthographicView, type PickingInfo } from '@deck.gl/core';
-import { PolygonLayer, TextLayer } from '@deck.gl/layers';
+import { PolygonLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers';
 import { useNavigate } from 'react-router-dom';
 import { useDataStore } from '../../stores/dataStore';
 import { useColorStore } from '../../stores/colorStore';
@@ -10,10 +10,19 @@ import { useThemeStore } from '../../stores/themeStore';
 import { useViewStore } from '../../stores/viewStore';
 import { categoricalColor } from '../../lib/colorScales';
 import { mapBackground, senescenceColor, textLabelTheme } from '../../lib/colors';
+import { DASHBOARD_SAMPLE_SIZE } from '../../lib/constants';
 import { Tooltip } from '../common/Tooltip';
 import type { HexbinBin } from '../../types/data';
 
 const VIEW = new OrthographicView({ id: 'level1-ortho', flipY: false });
+
+type SampledCell = {
+  index: number;
+  position: [number, number];
+  cellTypeCode: number;
+  cellTypeName: string;
+  senescence: number;
+};
 
 function buildHexagon(x: number, y: number, radius: number): [number, number][] {
   return new Array(6).fill(null).map((_, index) => {
@@ -22,17 +31,110 @@ function buildHexagon(x: number, y: number, radius: number): [number, number][] 
   });
 }
 
+function buildSampledCells(
+  coords: Float32Array,
+  cellTypeCodes: Uint8Array,
+  senescence: Float32Array,
+  cellTypeNames: string[],
+  sampleSize: number,
+): SampledCell[] {
+  const total = cellTypeCodes.length;
+  if (total === 0) {
+    return [];
+  }
+
+  const categoryCount = Math.max(cellTypeNames.length, Math.max(...cellTypeCodes) + 1);
+  const counts = new Array<number>(categoryCount).fill(0);
+  for (let i = 0; i < total; i++) {
+    counts[cellTypeCodes[i]] += 1;
+  }
+
+  const cappedSize = Math.min(sampleSize, total);
+  const quotas = counts.map((count) => (count > 0 ? Math.max(1, Math.floor((count / total) * cappedSize)) : 0));
+  let assigned = quotas.reduce((sum, count) => sum + count, 0);
+
+  if (assigned < cappedSize) {
+    const remainderOrder = counts
+      .map((count, code) => ({
+        code,
+        remainder: count > 0 ? (count / total) * cappedSize - quotas[code] : -1,
+      }))
+      .sort((a, b) => b.remainder - a.remainder);
+
+    let pointer = 0;
+    while (assigned < cappedSize && remainderOrder.length > 0) {
+      const { code } = remainderOrder[pointer];
+      if (counts[code] > quotas[code]) {
+        quotas[code] += 1;
+        assigned += 1;
+      }
+      pointer = (pointer + 1) % remainderOrder.length;
+    }
+  } else if (assigned > cappedSize) {
+    const reductionOrder = counts
+      .map((count, code) => ({ code, count }))
+      .sort((a, b) => b.count - a.count);
+
+    let pointer = 0;
+    while (assigned > cappedSize && reductionOrder.length > 0) {
+      const { code } = reductionOrder[pointer];
+      if (quotas[code] > 1) {
+        quotas[code] -= 1;
+        assigned -= 1;
+      }
+      pointer = (pointer + 1) % reductionOrder.length;
+    }
+  }
+
+  const seen = new Array<number>(categoryCount).fill(0);
+  const selected = new Array<number>(categoryCount).fill(0);
+  const sampled: SampledCell[] = [];
+
+  for (let i = 0; i < total; i++) {
+    const code = cellTypeCodes[i];
+    seen[code] += 1;
+    if (quotas[code] === 0) {
+      continue;
+    }
+
+    const nextSelected = Math.floor((seen[code] * quotas[code]) / counts[code]);
+    if (nextSelected <= selected[code]) {
+      continue;
+    }
+
+    selected[code] = nextSelected;
+    sampled.push({
+      index: i,
+      position: [coords[i * 2], coords[i * 2 + 1]],
+      cellTypeCode: code,
+      cellTypeName: cellTypeNames[code] ?? 'Unknown',
+      senescence: senescence[i] ?? 0,
+    });
+  }
+
+  return sampled;
+}
+
 export function HexbinMap() {
   const hexbin = useDataStore((s) => s.hexbin);
   const centroids = useDataStore((s) => s.centroids);
   const schema = useDataStore((s) => s.schema);
+  const coords = useDataStore((s) => s.coords);
+  const senescence = useDataStore((s) => s.senescence);
+  const cellTypeCodes = useDataStore((s) => s.cellTypeCodes);
+  const loadLevel2 = useDataStore((s) => s.loadLevel2);
+  const isLevel2Loaded = useDataStore((s) => s.isLevel2Loaded);
   const colorMode = useColorStore((s) => s.colorMode);
   const viewState = useViewStore((s) => s.viewState);
   const setViewState = useViewStore((s) => s.setViewState);
   const setSelectedCellType = useNavigationStore((s) => s.setSelectedCellType);
   const theme = useThemeStore((s) => s.theme);
   const navigate = useNavigate();
-  const [hovered, setHovered] = useState<{ x: number; y: number; bin: HexbinBin } | null>(null);
+  const [hovered, setHovered] = useState<
+    | { x: number; y: number; kind: 'bin'; bin: HexbinBin }
+    | { x: number; y: number; kind: 'cell'; cell: SampledCell }
+    | null
+  >(null);
   const labelTheme = textLabelTheme(theme);
 
   const bins = useMemo(() => hexbin?.bins ?? [], [hexbin]);
@@ -41,7 +143,77 @@ export function HexbinMap() {
     [hexbin, schema],
   );
 
+  const sampledCells = useMemo(() => {
+    if (!coords || !senescence || !cellTypeCodes) {
+      return [];
+    }
+    return buildSampledCells(coords, cellTypeCodes, senescence, cellTypeNames, DASHBOARD_SAMPLE_SIZE);
+  }, [cellTypeCodes, cellTypeNames, coords, senescence]);
+
+  const useSampledScatter = sampledCells.length > 0;
+
+  useEffect(() => {
+    if (isLevel2Loaded) {
+      return;
+    }
+    void loadLevel2().catch((error) => {
+      console.error('Dashboard level2 preload failed:', error);
+    });
+  }, [isLevel2Loaded, loadLevel2]);
+
   const layers = useMemo(() => {
+    if (useSampledScatter) {
+      return [
+        new ScatterplotLayer({
+          id: 'level1-sampled-cells',
+          data: sampledCells,
+          pickable: true,
+          opacity: 0.9,
+          stroked: false,
+          filled: true,
+          radiusUnits: 'pixels',
+          getPosition: (d: SampledCell) => d.position,
+          getRadius: 2.2,
+          radiusMinPixels: 1.5,
+          radiusMaxPixels: 4,
+          getFillColor: (d: SampledCell) =>
+            colorMode === 'senescence' ? senescenceColor(d.senescence) : categoricalColor(d.cellTypeCode),
+          onClick: (info: PickingInfo<SampledCell>) => {
+            if (!info.object) return;
+            setSelectedCellType(info.object.cellTypeName);
+            navigate('/explorer');
+          },
+          onHover: (info: PickingInfo<SampledCell>) => {
+            if (!info.object || info.x === undefined || info.y === undefined) {
+              setHovered(null);
+              return;
+            }
+            setHovered({ x: info.x, y: info.y, kind: 'cell', cell: info.object });
+          },
+          updateTriggers: {
+            getFillColor: [colorMode],
+          },
+        }),
+        new TextLayer({
+          id: 'level1-centroids',
+          data: centroids,
+          pickable: true,
+          getPosition: (d) => [d.x, d.y],
+          getText: (d) => d.name,
+          getSize: 14,
+          getColor: labelTheme.text,
+          fontWeight: 700,
+          outlineColor: labelTheme.outline,
+          outlineWidth: 3,
+          onClick: (info: PickingInfo<(typeof centroids)[number]>) => {
+            if (!info.object) return;
+            setSelectedCellType(info.object.name);
+            navigate('/explorer');
+          },
+        }),
+      ];
+    }
+
     const polygonData = bins.map((bin) => ({
       ...bin,
       polygon: buildHexagon(bin.x, bin.y, hexbin?.radius ?? 0.25),
@@ -72,7 +244,7 @@ export function HexbinMap() {
             setHovered(null);
             return;
           }
-          setHovered({ x: info.x, y: info.y, bin: info.object });
+          setHovered({ x: info.x, y: info.y, kind: 'bin', bin: info.object });
         },
       }),
       new TextLayer({
@@ -93,7 +265,20 @@ export function HexbinMap() {
         },
       }),
     ];
-  }, [bins, cellTypeNames, centroids, colorMode, hexbin?.radius, labelTheme.outline, labelTheme.text, navigate, setSelectedCellType, theme]);
+  }, [
+    bins,
+    cellTypeNames,
+    centroids,
+    colorMode,
+    hexbin?.radius,
+    labelTheme.outline,
+    labelTheme.text,
+    navigate,
+    sampledCells,
+    setSelectedCellType,
+    theme,
+    useSampledScatter,
+  ]);
 
   return (
     <div className="relative flex-1">
@@ -112,13 +297,25 @@ export function HexbinMap() {
           })}
       />
       <div className="pointer-events-none absolute left-4 top-4 rounded-full border border-[var(--border)] bg-[var(--surface-overlay)] px-3 py-1 text-xs text-[var(--text-muted)] shadow-sm">
-        {bins.length.toLocaleString()} hexbins • click a region to drill down
+        {useSampledScatter
+          ? `${sampledCells.length.toLocaleString()} sampled cells • WebGL overview • click to drill down`
+          : `${bins.length.toLocaleString()} hexbins • loading cell-level overview`}
       </div>
       {hovered && (
         <Tooltip x={hovered.x} y={hovered.y}>
-          <div className="font-medium text-[var(--text)]">{cellTypeNames[hovered.bin.dominant_celltype] ?? 'Unknown'}</div>
-          <div className="mt-1 text-[var(--text-muted)]">{hovered.bin.count.toLocaleString()} cells</div>
-          <div className="text-[var(--text-muted)]">senescence {hovered.bin.senescence_mean.toFixed(3)}</div>
+          {hovered.kind === 'cell' ? (
+            <>
+              <div className="font-medium text-[var(--text)]">{hovered.cell.cellTypeName}</div>
+              <div className="mt-1 text-[var(--text-muted)]">sampled cell #{hovered.cell.index.toLocaleString()}</div>
+              <div className="text-[var(--text-muted)]">senescence {hovered.cell.senescence.toFixed(3)}</div>
+            </>
+          ) : (
+            <>
+              <div className="font-medium text-[var(--text)]">{cellTypeNames[hovered.bin.dominant_celltype] ?? 'Unknown'}</div>
+              <div className="mt-1 text-[var(--text-muted)]">{hovered.bin.count.toLocaleString()} cells</div>
+              <div className="text-[var(--text-muted)]">senescence {hovered.bin.senescence_mean.toFixed(3)}</div>
+            </>
+          )}
         </Tooltip>
       )}
     </div>
