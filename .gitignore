@@ -136,6 +136,7 @@ ETL_PROGRESS.md
 FINAL_*.md
 VERIFICATION_*.md
 OPTIMIZATION_GUIDE.md
+DESIGN.md
 rebuild.txt
 start.sh
 
