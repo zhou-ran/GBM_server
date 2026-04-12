@@ -81,16 +81,18 @@ export const useDataStore = create<DataState>((set) => ({
       set({ schema, nCells: schema.n_cells });
 
       onProgress?.('Loading aggregated atlas...');
-      const [hexbin, centroids, globalStats] = await Promise.all([
+      const [hexbin, centroids, globalStats, patients] = await Promise.all([
         fetchJSON<HexbinData>(ENDPOINTS.hexbin).catch(() => null),
         fetchJSON<Centroid[]>(ENDPOINTS.centroids).catch(() => []),
         fetchJSON<GlobalStats>(ENDPOINTS.stats).catch(() => null),
+        fetchJSON<Patient[]>(ENDPOINTS.patients).catch(() => []),
       ]);
 
       set({
         hexbin,
         centroids,
         globalStats,
+        patients,
         isLevel1Loaded: true,
       });
     })();
@@ -111,9 +113,8 @@ export const useDataStore = create<DataState>((set) => ({
 
     level2Promise = (async () => {
       onProgress?.('Loading cell data...');
-      const [cellTable, patients, deResults, correlation] = await Promise.all([
+      const [cellTable, deResults, correlation] = await Promise.all([
         fetchArrowTable(ENDPOINTS.cells),
-        fetchJSON<Patient[]>(ENDPOINTS.patients).catch(() => []),
         fetchJSON<Record<string, DEGene[]>>(ENDPOINTS.de).catch(() => ({})),
         fetchJSON<CorrelationData>(ENDPOINTS.correlation).catch(() => null),
       ]);
@@ -141,7 +142,6 @@ export const useDataStore = create<DataState>((set) => ({
         sexCodes: cellTable.getChild('sex')!.toArray() as Uint8Array,
         donorCodes: cellTable.getChild('donor_id')!.toArray() as Uint16Array,
         sampleCodes: cellTable.getChild('Sample')!.toArray() as Uint16Array,
-        patients,
         deResults,
         correlation,
         isLevel2Loaded: true,

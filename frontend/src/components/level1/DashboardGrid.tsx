@@ -3,6 +3,7 @@ import { AGE_GROUP_COLORS, IDH_COLORS } from '../../lib/colors';
 import { paletteCss } from '../../lib/colorScales';
 import { useDataStore } from '../../stores/dataStore';
 import { StackedBar } from '../common/StackedBar';
+import { CompositionBoxPlot } from './CompositionBoxPlot';
 import { HexbinMap } from './HexbinMap';
 
 type CountEntry = {
@@ -136,42 +137,51 @@ export function DashboardGrid() {
           <h1 className="mt-2 text-2xl font-semibold text-[var(--text)]">Dashboard</h1>
         </div>
 
-        <DashboardCard title="UMAP Atlas" subtitle="Interactive WebGL overview">
-          <div className="h-full min-h-[480px] overflow-hidden rounded-[1.25rem] border border-[var(--border)] bg-[var(--surface-overlay)]">
-            <HexbinMap />
-          </div>
-        </DashboardCard>
-
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <DonutCard title="Age Distribution" subtitle="Patient cohorts" items={ageEntries} />
-          <DonutCard title="IDH Split" subtitle="Tumor genotype mix" items={idhEntries} />
-
-          <DashboardCard title="Stage Composition" subtitle="Clinical staging">
-            <div className="flex h-full flex-col gap-4">
-              <StackedBar items={stageEntries} />
-              <div className="grid grid-cols-1 gap-2 overflow-auto pr-1">
-                {stageEntries.map((item) => (
-                  <div key={item.label} className="flex items-center gap-2 text-sm">
-                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: item.color }} />
-                    <span className="flex-1 truncate">{item.label}</span>
-                    <span className="text-xs text-[var(--text-muted)]">{item.value.toLocaleString()}</span>
-                  </div>
-                ))}
-              </div>
+        {/* Top row: UMAP (left) + Boxplot (right) */}
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <DashboardCard title="UMAP Atlas" subtitle="Interactive WebGL overview">
+            <div className="h-full min-h-[420px] overflow-hidden rounded-[1.25rem] border border-[var(--border)] bg-[var(--surface-overlay)]">
+              <HexbinMap />
             </div>
           </DashboardCard>
 
-          <DashboardCard title="Sex Composition" subtitle="Demographic split">
+          <DashboardCard title="Composition Boxplot" subtitle="Senescence by group">
+            <CompositionBoxPlot />
+          </DashboardCard>
+        </div>
+
+        {/* Bottom row: Age | IDH | Stage & Sex (merged) */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <DonutCard title="Age Distribution" subtitle="Patient cohorts" items={ageEntries} />
+          <DonutCard title="IDH Split" subtitle="Tumor genotype mix" items={idhEntries} />
+
+          <DashboardCard title="Stage & Sex" subtitle="Clinical composition">
             <div className="flex h-full flex-col gap-4">
-              <StackedBar items={sexEntries} />
-              <div className="grid grid-cols-1 gap-2 overflow-auto pr-1">
-                {sexEntries.map((item) => (
-                  <div key={item.label} className="flex items-center gap-2 text-sm">
-                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: item.color }} />
-                    <span className="flex-1 truncate">{item.label}</span>
-                    <span className="text-xs text-[var(--text-muted)]">{item.value.toLocaleString()}</span>
-                  </div>
-                ))}
+              <div>
+                <div className="mb-1.5 text-xs font-medium text-[var(--text-muted)]">Stage</div>
+                <StackedBar items={stageEntries} />
+                <div className="mt-2 space-y-1">
+                  {stageEntries.map((item) => (
+                    <div key={item.label} className="flex items-center gap-2 text-xs">
+                      <span className="h-2 w-2 rounded-full" style={{ background: item.color }} />
+                      <span className="flex-1 truncate text-[var(--text)]">{item.label}</span>
+                      <span className="text-[var(--text-muted)]">{item.value.toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="border-t border-[var(--border)] pt-3">
+                <div className="mb-1.5 text-xs font-medium text-[var(--text-muted)]">Sex</div>
+                <StackedBar items={sexEntries} />
+                <div className="mt-2 space-y-1">
+                  {sexEntries.map((item) => (
+                    <div key={item.label} className="flex items-center gap-2 text-xs">
+                      <span className="h-2 w-2 rounded-full" style={{ background: item.color }} />
+                      <span className="flex-1 truncate text-[var(--text)]">{item.label}</span>
+                      <span className="text-[var(--text-muted)]">{item.value.toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </DashboardCard>
