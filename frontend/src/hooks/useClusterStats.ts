@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useDataStore } from '../stores/dataStore';
 import { useFilterStore } from '../stores/filterStore';
 import { useNavigationStore } from '../stores/navigationStore';
+import { getSchemaCategories } from '../lib/schema';
 
 interface ClusterPoint {
   index: number;
@@ -44,8 +45,8 @@ export function useClusterStats() {
       };
     }
 
-    const subtypeCategories = schema.columns.find((column) => column.name === 'CellType_Level2')?.categories ?? [];
-    const donorCategories = schema.columns.find((column) => column.name === 'donor_id')?.categories ?? [];
+    const subtypeCategories = getSchemaCategories(schema, 'CellType_Level2');
+    const donorCategories = getSchemaCategories(schema, 'donor_id');
     const subtypeCounts: Record<string, number> = {};
     const subtypeSenescence: Record<string, number[]> = {};
     const centroidBuckets = new Map<string, { x: number; y: number; count: number; senescence: number }>();

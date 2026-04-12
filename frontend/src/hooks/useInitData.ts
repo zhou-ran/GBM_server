@@ -130,7 +130,7 @@ export function useInitExplorerData() {
             stage: stageCodes,
             age_Group5565: ageCodes,
             sex: sexCodes,
-            donor_id: donorCodes as unknown as Uint8Array,
+            donor_id: donorCodes,
           });
         }
 

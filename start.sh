@@ -1,5 +1,5 @@
+#!/bin/bash
 
-#!/usr/bin/env bash
 # Start the GBM Senescence Atlas — new React + Arrow architecture.
 # Launches backend (FastAPI, port 8050) and frontend (Vite dev, port 5174).
 set -euo pipefail

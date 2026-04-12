@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Tooltip } from '../common/Tooltip';
 import { useDataStore } from '../../stores/dataStore';
+import { readSchemaCategory } from '../../lib/schema';
 
 interface CellTooltipProps {
   cell: {
@@ -8,17 +9,6 @@ interface CellTooltipProps {
     x: number;
     y: number;
   };
-}
-
-function readCategory(
-  categories: string[] | undefined,
-  code: number | undefined,
-  fallback: string,
-) {
-  if (!categories || code === undefined || code < 0) {
-    return fallback;
-  }
-  return categories[code] ?? fallback;
 }
 
 export function CellTooltip({ cell }: CellTooltipProps) {
@@ -34,12 +24,11 @@ export function CellTooltip({ cell }: CellTooltipProps) {
       return null;
     }
 
-    const categoryMap = (name: string) => schema.columns.find((column) => column.name === name)?.categories;
     return {
-      cellType: readCategory(categoryMap('CellType'), cellTypeCodes[cell.index], 'Unknown'),
-      subtype: readCategory(categoryMap('CellType_Level2'), cellType2Codes[cell.index], 'Unknown'),
-      age: readCategory(categoryMap('age_Group5565'), ageCodes[cell.index], 'Unknown'),
-      donor: readCategory(categoryMap('donor_id'), donorCodes[cell.index], 'Unknown'),
+      cellType: readSchemaCategory(schema, 'CellType', cellTypeCodes[cell.index], 'Unknown'),
+      subtype: readSchemaCategory(schema, 'CellType_Level2', cellType2Codes[cell.index], 'Unknown'),
+      age: readSchemaCategory(schema, 'age_Group5565', ageCodes[cell.index], 'Unknown'),
+      donor: readSchemaCategory(schema, 'donor_id', donorCodes[cell.index], 'Unknown'),
       senescence: senescence[cell.index],
     };
   }, [ageCodes, cell.index, cellType2Codes, cellTypeCodes, donorCodes, schema, senescence]);

@@ -66,22 +66,24 @@ class DataCache:
     def meta_columns(self) -> dict[str, np.ndarray]:
         """Dict of column_name → numpy array, extracted from meta.bin."""
         if self._meta_columns is None:
-            raw = np.fromfile(DATA_DIR / "meta.bin", dtype=np.uint8)
+            raw = (DATA_DIR / "meta.bin").read_bytes()
             n = self.n_cells
             cols: dict[str, np.ndarray] = {}
             offset = 0
             for col_def in self.schema["columns"]:
                 dtype = col_def.get("dtype", "uint8")
-                if dtype == "uint16":
-                    # uint16 stored as raw bytes in the uint8 buffer
-                    byte_len = n * 2
-                    cols[col_def["name"]] = np.frombuffer(
-                        raw[offset : offset + byte_len].tobytes(), dtype=np.uint16
-                    )
-                    offset += byte_len
-                else:
-                    cols[col_def["name"]] = raw[offset : offset + n]
-                    offset += n
+                itemsize = col_def.get("itemsize", np.dtype(dtype).itemsize)
+                byte_offset = col_def.get("byte_offset", offset)
+                byte_length = col_def.get("byte_length", n * itemsize)
+                count = byte_length // itemsize
+
+                cols[col_def["name"]] = np.frombuffer(
+                    raw,
+                    dtype=np.dtype(dtype),
+                    count=count,
+                    offset=byte_offset,
+                )
+                offset = byte_offset + byte_length
             self._meta_columns = cols
         return self._meta_columns
 

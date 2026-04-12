@@ -1,16 +1,10 @@
 import { useMemo } from 'react';
 import { useDataStore } from '../../stores/dataStore';
+import { readSchemaCategory } from '../../lib/schema';
 
 interface CellDrawerProps {
   cellId: string;
   onClose: () => void;
-}
-
-function formatCategory(categories: string[] | undefined, code: number | undefined) {
-  if (!categories || code === undefined || code < 0) {
-    return 'Unavailable';
-  }
-  return categories[code] ?? `Code ${code}`;
 }
 
 export function CellDrawer({ cellId, onClose }: CellDrawerProps) {
@@ -47,20 +41,18 @@ export function CellDrawer({ cellId, onClose }: CellDrawerProps) {
       return null;
     }
 
-    const categories = (name: string) => schema.columns.find((column) => column.name === name)?.categories;
-
     return {
       x: coords[index * 2],
       y: coords[index * 2 + 1],
       senescence: senescence[index],
-      cellType: formatCategory(categories('CellType'), cellTypeCodes[index]),
-      subtype: formatCategory(categories('CellType_Level2'), cellType2Codes[index]),
-      idh: formatCategory(categories('IDH'), idhCodes[index]),
-      stage: formatCategory(categories('stage'), stageCodes[index]),
-      age: formatCategory(categories('age_Group5565'), ageCodes[index]),
-      sex: formatCategory(categories('sex'), sexCodes[index]),
-      donor: formatCategory(categories('donor_id'), donorCodes[index]),
-      sample: formatCategory(categories('Sample'), sampleCodes[index]),
+      cellType: readSchemaCategory(schema, 'CellType', cellTypeCodes[index], 'Unavailable'),
+      subtype: readSchemaCategory(schema, 'CellType_Level2', cellType2Codes[index], 'Unavailable'),
+      idh: readSchemaCategory(schema, 'IDH', idhCodes[index], 'Unavailable'),
+      stage: readSchemaCategory(schema, 'stage', stageCodes[index], 'Unavailable'),
+      age: readSchemaCategory(schema, 'age_Group5565', ageCodes[index], 'Unavailable'),
+      sex: readSchemaCategory(schema, 'sex', sexCodes[index], 'Unavailable'),
+      donor: readSchemaCategory(schema, 'donor_id', donorCodes[index], 'Unavailable'),
+      sample: readSchemaCategory(schema, 'Sample', sampleCodes[index], 'Unavailable'),
     };
   }, [ageCodes, cellType2Codes, cellTypeCodes, coords, donorCodes, idhCodes, index, sampleCodes, schema, senescence, sexCodes, stageCodes]);
 

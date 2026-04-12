@@ -3,13 +3,15 @@
 import { create } from 'zustand';
 import type { Schema } from '../types/schema';
 
+type MetaColumn = Uint8Array | Uint16Array;
+
 interface FilterStoreState {
   activeFilters: Record<string, Set<number>>;
   filterMask: Uint8Array | null;
   highlightedDonor: number | null;
   filterableColumns: string[];
 
-  initFilters: (schema: Schema, metaColumns: Record<string, Uint8Array>) => void;
+  initFilters: (schema: Schema, metaColumns: Record<string, MetaColumn>) => void;
   toggleCategory: (column: string, catIdx: number) => void;
   setCellTypeFilter: (cellType: string | null) => void;
   highlightDonor: (donorIdx: number | null) => void;
@@ -19,7 +21,7 @@ interface FilterStoreState {
 // Columns available for filtering (uint8 only, small cardinality)
 const FILTERABLE = ['CellType', 'CellType_Level2', 'IDH', 'stage', 'age_Group5565', 'sex'];
 
-let _metaColumnsRef: Record<string, Uint8Array> = {};
+let _metaColumnsRef: Record<string, MetaColumn> = {};
 let _nCells = 0;
 let _schemaRef: Schema | null = null;
 
@@ -66,7 +68,7 @@ export const useFilterStore = create<FilterStoreState>((set, get) => ({
   initFilters: (schema, metaColumns) => {
     _schemaRef = schema;
     _nCells = schema.n_cells;
-    _metaColumnsRef = metaColumns as Record<string, Uint8Array>;
+    _metaColumnsRef = metaColumns;
     const mask = new Uint8Array(_nCells).fill(1);
     set({ filterMask: mask, activeFilters: {} });
   },
