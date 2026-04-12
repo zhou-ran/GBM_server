@@ -1,6 +1,7 @@
 import { Suspense, lazy } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { LoadingOverlay } from './components/common/LoadingOverlay';
+import { useAppPreload } from './hooks/useAppPreload';
 import { MainLayout } from './layouts/MainLayout';
 
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
@@ -8,6 +9,8 @@ const ExplorerPage = lazy(() => import('./pages/ExplorerPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
 
 function App() {
+  useAppPreload();
+
   return (
     <BrowserRouter>
       <Suspense fallback={<LoadingOverlay />}>

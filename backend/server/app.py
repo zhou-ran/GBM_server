@@ -16,10 +16,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Warm up: pre-load schema on startup (lightweight)
     from .data_cache import get_cache
 
-    _ = get_cache().schema
+    cache = get_cache()
+
+    _ = cache.schema
+    _ = cache.cells_ipc
+
+    for json_file in [
+        "hexbin.json",
+        "centroids.json",
+        "stats.json",
+        "patients.json",
+    ]:
+        cache.load_json(json_file)
+
+    print("Backend data cache warmed up")
     yield
 
 

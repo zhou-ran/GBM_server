@@ -17,10 +17,10 @@ interface UIStoreState {
 }
 
 export const useUIStore = create<UIStoreState>((set) => ({
-  isLoading: true,
-  loadingMessage: 'Initializing...',
-  levelLoading: { 1: true },
-  levelProgress: { 1: 'Initializing...' },
+  isLoading: false,
+  loadingMessage: '',
+  levelLoading: { 1: false },
+  levelProgress: { 1: '' },
   activeTab: 'waterfall',
   selectedDonor: null,
 

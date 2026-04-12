@@ -23,6 +23,7 @@ class DataCache:
         self._meta_columns: dict[str, np.ndarray] | None = None
         self._cells_ipc: bytes | None = None
         self._gene_index: dict[str, int] | None = None
+        self._json_cache: dict[str, dict | list | None] = {}
 
     # -- Schema ----------------------------------------------------------
 
@@ -123,11 +124,17 @@ class DataCache:
     # -- JSON file helpers -----------------------------------------------
 
     def load_json(self, filename: str) -> dict | list | None:
+        if filename in self._json_cache:
+            return self._json_cache[filename]
+
         path = DATA_DIR / filename
         if not path.exists():
+            self._json_cache[filename] = None
             return None
         with open(path) as f:
-            return json.load(f)
+            data = json.load(f)
+        self._json_cache[filename] = data
+        return data
 
     def data_file_path(self, filename: str) -> Path | None:
         path = DATA_DIR / filename
